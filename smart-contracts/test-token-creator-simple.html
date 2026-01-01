@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Token Creator - Minimal Test</title>
+    <style>
+        body { font-family: Arial; padding: 40px; background: #0a0e1a; color: white; }
+        .template-card {
+            display: inline-block;
+            padding: 20px;
+            margin: 10px;
+            background: #121826;
+            border: 2px solid #1f2937;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .template-card.active {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.1);
+        }
+        button {
+            background: #00d4ff;
+            color: #0a0e1a;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Minimal Token Creator Test</h1>
+    <p>This tests JUST the template selection with same structure as token-creator.html</p>
+    
+    <div class="template-card active" data-template="standard">
+        🪙 Standard
+    </div>
+    <div class="template-card" data-template="mintable">
+        ➕ Mintable
+    </div>
+    <div class="template-card" data-template="burnable">
+        🔥 Burnable
+    </div>
+    
+    <br>
+    <button onclick="testContinue()">Continue →</button>
+    
+    <div id="result" style="margin-top: 20px; padding: 15px; background: #1a1f2e; border-radius: 8px;"></div>
+
+    <script>
+        console.log('Script started');
+        
+        // Same variable declaration as token-creator.html
+        let selectedTemplate = 'standard';
+        console.log('Initial selectedTemplate:', selectedTemplate);
+        
+        // Same DOMContentLoaded as token-creator.html
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('=== INITIALIZING TEMPLATE SELECTOR ===');
+            
+            const templateCards = document.querySelectorAll('.template-card');
+            console.log('Found', templateCards.length, 'template cards');
+            
+            templateCards.forEach((card, index) => {
+                const template = card.getAttribute('data-template');
+                console.log(`Card ${index}: ${template}`);
+                
+                card.addEventListener('click', function() {
+                    console.log('=== TEMPLATE CARD CLICKED ===');
+                    console.log('Template:', template);
+                    
+                    selectedTemplate = template;
+                    console.log('selectedTemplate =', selectedTemplate);
+                    
+                    templateCards.forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    document.getElementById('result').textContent = 'Selected: ' + selectedTemplate;
+                    console.log('=== SELECTION COMPLETE ===');
+                });
+            });
+            
+            console.log('✅ Event listeners attached');
+            console.log('=== INITIALIZATION COMPLETE ===');
+        });
+        
+        function testContinue() {
+            console.log('Continue clicked, selectedTemplate =', selectedTemplate);
+            
+            if (!selectedTemplate) {
+                alert('Please select a template!');
+            } else {
+                alert('✅ Proceeding with: ' + selectedTemplate);
+            }
+        }
+        
+        console.log('Script ended');
+    </script>
+</body>
+</html>

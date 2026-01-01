@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Chain Selector</title>
+    <style>
+        body {
+            font-family: Arial;
+            padding: 40px;
+            background: #0a0e1a;
+            color: white;
+        }
+        button {
+            background: #00d4ff;
+            color: #0a0e1a;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chain Selector Test</h1>
+    
+    <div>
+        <p>Active Chain: <span id="activeChainDisplay" style="color: #00d4ff;">Ethereum</span></p>
+        <button onclick="openChainModal()">Open Chain Selector</button>
+    </div>
+    
+    <div style="margin-top: 20px; padding: 15px; background: #121826; border-radius: 8px;">
+        <h3>Available Categories:</h3>
+        <pre id="categories"></pre>
+    </div>
+
+    <script src="js/chain-selector.js"></script>
+    <script>
+        // Display categories for debugging
+        document.getElementById('categories').textContent = JSON.stringify(CHAIN_CATEGORIES, null, 2);
+        console.log('Chain Categories:', CHAIN_CATEGORIES);
+        console.log('Testnets:', CHAIN_CATEGORIES['Testnets']);
+    </script>
+</body>
+</html>

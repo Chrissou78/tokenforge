@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token & LP Locker</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #0a0e1a;
+            color: white;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 { color: #00d4ff; margin-bottom: 0.5rem; }
+        .subtitle { color: #8892b0; margin-bottom: 2rem; }
+        
+        .section {
+            background: #121826;
+            border: 2px solid #1f2937;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 0.8rem;
+            background: #0a0e1a;
+            border: 2px solid #1f2937;
+            color: white;
+            border-radius: 6px;
+            margin: 0.5rem 0;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+        
+        button {
+            width: 100%;
+            padding: 1rem;
+            background: #00d4ff;
+            color: #0a0e1a;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0.5rem 0;
+            transition: all 0.3s;
+        }
+        
+        button:hover:not(:disabled) { 
+            background: #0099cc;
+            transform: translateY(-2px);
+        }
+        
+        button:disabled { 
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary { background: #4a90e2; }
+        .btn-secondary:hover:not(:disabled) { background: #357abd; }
+        
+        .btn-danger { background: #ff3366; }
+        .btn-danger:hover:not(:disabled) { background: #cc0033; }
+        
+        .info-box {
+            background: #0a0e1a;
+            border-left: 4px solid #00d4ff;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        
+        .warning-box {
+            background: #2d1f15;
+            border-left: 4px solid #ffaa00;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            color: #ffcc88;
+        }
+        
+        .success-box {
+            background: #1a2d1f;
+            border-left: 4px solid #00d4ff;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            color: #aae3ff;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .stat {
+            background: #0a0e1a;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #1f2937;
+        }
+        
+        .stat-label {
+            color: #8892b0;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-value {
+            color: #00d4ff;
+            font-size: 1.5rem;
+            font-weight: bold;
+            font-family: monospace;
+        }
+        
+        .lock-card {
+            background: #0a0e1a;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+            border: 2px solid #1f2937;
+            transition: all 0.3s;
+        }
+        
+        .lock-card:hover {
+            border-color: #00d4ff;
+            transform: translateY(-2px);
+        }
+        
+        .lock-card.locked { border-color: #ffaa00; }
+        .lock-card.unlocked { border-color: #00d4ff; }
+        
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 1rem;
+            background: #0a0e1a;
+            border: 2px solid #1f2937;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .tab:hover { border-color: #00d4ff; }
+        
+        .tab.active {
+            border-color: #00d4ff;
+            background: rgba(0, 255, 136, 0.1);
+        }
+        
+        .tab-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .fee-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .fee-option {
+            background: #0a0e1a;
+            border: 2px solid #1f2937;
+            border-radius: 8px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .fee-option:hover {
+            border-color: #00d4ff;
+        }
+        
+        .fee-option.active {
+            border-color: #00d4ff;
+            background: rgba(0, 255, 136, 0.1);
+        }
+        
+        .duration-presets {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .duration-btn {
+            padding: 1rem;
+            background: #0a0e1a;
+            border: 2px solid #1f2937;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .duration-btn:hover {
+            border-color: #00d4ff;
+        }
+        
+        .duration-btn.active {
+            border-color: #00d4ff;
+            background: rgba(0, 255, 136, 0.1);
+        }
+        
+        .wallet-status {
+            background: #0a0e1a;
+            border: 2px solid #1f2937;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .wallet-status.connected {
+            border-color: #00d4ff;
+        }
+        
+        .hidden { display: none; }
+        
+        label {
+            display: block;
+            color: #8892b0;
+            margin: 1rem 0 0.5rem 0;
+            font-weight: bold;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin: 2rem 0;
+        }
+        
+        .step {
+            flex: 1;
+            text-align: center;
+            padding: 1rem;
+            background: #0a0e1a;
+            border: 2px solid #1f2937;
+            border-radius: 8px;
+            margin: 0 0.5rem;
+        }
+        
+        .step.active {
+            border-color: #00d4ff;
+            background: rgba(0, 255, 136, 0.1);
+        }
+        
+        .step.completed {
+            border-color: #00d4ff;
+            background: rgba(0, 255, 136, 0.05);
+        }
+        
+        .countdown-timer {
+            background: #0a0e1a;
+            border: 2px solid #ffaa00;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            margin: 1rem 0;
+        }
+        
+        .countdown {
+            font-size: 2rem;
+            color: #ffaa00;
+            font-weight: bold;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔒 Token & LP Locker</h1>
+    <p class="subtitle">Lock tokens or liquidity pairs with time-based release</p>
+    <!-- Chain Selector -->
+    <div class="section" style="background: #121826; border: 2px solid #1f2937; border-radius: 12px; padding: 1.5rem; margin: 2rem 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <div style="color: #8892b0; font-size: 0.85rem; margin-bottom: 0.5rem;">Active Blockchain</div>
+                <div style="color: #00d4ff; font-size: 1.2rem; font-weight: bold;" id="activeChainDisplay">Ethereum</div>
+            </div>
+            <button onclick="openChainModal()" style="padding: 0.8rem 1.5rem; background: #00d4ff; color: #0a0e1a; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s;">
+                Change Chain
+            </button>
+        </div>
+        <div style="color: #8892b0; font-size: 0.85rem; text-align: center; margin-top: 1rem;">
+            Chain synced across all tools • 33 blockchains supported
+        </div>
+    </div>
+    
+    <!-- Wallet Connection -->
+    <div class="section">
+        <h3>Connect Wallet</h3>
+        
+        <div class="wallet-status" id="walletStatus">
+            <div>
+                <div style="color: #8892b0; font-size: 0.85rem;">Wallet Status</div>
+                <div id="walletAddress" style="font-family: monospace; margin-top: 0.5rem;">Not Connected</div>
+            </div>
+            <button id="connectBtn" onclick="connectWallet()" style="width: auto; padding: 0.8rem 2rem;">
+                Connect Wallet
+            </button>
+        </div>
+    </div>
+
+    </div>
+    
+    <!-- Lock Creation Flow -->
+    <div id="lockFlow" class="hidden">
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step active" id="step1">
+                <div style="font-size: 1.5rem;">1️⃣</div>
+                <div style="margin-top: 0.5rem;">Select Token</div>
+            </div>
+            <div class="step" id="step2">
+                <div style="font-size: 1.5rem;">2️⃣</div>
+                <div style="margin-top: 0.5rem;">Set Amount</div>
+            </div>
+            <div class="step" id="step3">
+                <div style="font-size: 1.5rem;">3️⃣</div>
+                <div style="margin-top: 0.5rem;">Choose Date</div>
+            </div>
+            <div class="step" id="step4">
+                <div style="font-size: 1.5rem;">4️⃣</div>
+                <div style="margin-top: 0.5rem;">Pay Fee</div>
+            </div>
+            <div class="step" id="step5">
+                <div style="font-size: 1.5rem;">5️⃣</div>
+                <div style="margin-top: 0.5rem;">Approve & Lock</div>
+            </div>
+        </div>
+        
+        <!-- Step 1: Token Selection -->
+        
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                        <div>
+                            <div style="color: #8892b0; font-size: 0.85rem;">Unlock Date</div>
+                            <div style="margin-top: 0.3rem;">${new Date(lock.unlockDate).toLocaleDateString()}</div>
+                        </div>
+                        <div>
+                            <div style="color: #8892b0; font-size: 0.85rem;">${isUnlocked ? 'Ready' : 'Days Left'}</div>
+                            <div style="margin-top: 0.3rem; color: ${isUnlocked ? '#00d4ff' : '#ffaa00'};">
+                                ${isUnlocked ? 'Claimable' : daysRemaining + ' days'}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1.5rem; display: grid; grid-template-columns: ${isUnlocked ? '1fr' : '1fr 1fr'}; gap: 1rem;">
+                        ${isUnlocked 
+                            ? `<button onclick="unlockTokens(${idx})" style="background: #00d4ff;">🔓 Unlock Tokens</button>`
+                            : `<button onclick="emergencyUnlock(${idx})" style="background: #ff3366;">⚠️ Emergency Unlock ($300)</button>
+                               <button onclick="viewLockDetails(${idx})" style="background: #4a90e2;">View Details</button>`
+                        }
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+        
+        async function unlockTokens(idx) {
+            if (!confirm('Unlock and claim your tokens?')) return;
+            
+            alert('🔓 Unlocking tokens...');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            let locks = JSON.parse(localStorage.getItem('locks') || '[]');
+            locks[idx].locked = false;
+            localStorage.setItem('locks', JSON.stringify(locks));
+            
+            alert('✅ Tokens unlocked and sent to your wallet!');
+            loadMyLocks();
+        }
+        
+        async function emergencyUnlock(idx) {
+            if (!confirm(`Emergency unlock costs $${EMERGENCY_UNLOCK_FEE} in native tokens. Continue?`)) return;
+            
+            alert('⚠️ Processing emergency unlock...');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            let locks = JSON.parse(localStorage.getItem('locks') || '[]');
+            locks[idx].locked = false;
+            localStorage.setItem('locks', JSON.stringify(locks));
+            
+            alert(`✅ Emergency unlock complete! Paid $${EMERGENCY_UNLOCK_FEE} fee.`);
+            loadMyLocks();
+        }
+        
+        function viewLockDetails(idx) {
+            const locks = JSON.parse(localStorage.getItem('locks') || '[]');
+            const lock = locks[idx];
+            alert(`Lock Details:\n\nAmount: ${lock.amount} ${lock.token}\nUnlock: ${new Date(lock.unlockDate).toLocaleString()}\nTX: ${lock.txHash}`);
+        }
+        
+        function viewMyLocks() {
+            selectAction('mylocks');
+            document.querySelector('.tab:nth-child(2)').click();
+        }
+        
+        function createNewLock() {
+            document.getElementById('successModal').classList.add('hidden');
+            currentStep = 1;
+            document.querySelectorAll('.step').forEach(s => {
+                s.classList.remove('active', 'completed');
+            });
+            document.getElementById('step1').classList.add('active');
+            document.getElementById('tokenSelection').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        function cancelLock() {
+            if (confirm('Cancel lock creation?')) {
+                createNewLock();
+            }
+        }
+        
+        console.log('✅ Token Locker Ready!');
+    </script>
+    <script src="js/chain-selector.js"></script>
+</body>
+</html>

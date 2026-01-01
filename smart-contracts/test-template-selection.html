@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Template Selection Test</title>
+    <style>
+        body {
+            font-family: Arial;
+            padding: 40px;
+            background: #0a0e1a;
+            color: white;
+        }
+        .template-card {
+            display: inline-block;
+            padding: 20px;
+            margin: 10px;
+            background: #121826;
+            border: 2px solid #1f2937;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .template-card:hover {
+            border-color: #00d4ff;
+        }
+        .template-card.active {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.1);
+        }
+        button {
+            background: #00d4ff;
+            color: #0a0e1a;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1a1f2e;
+            border-radius: 8px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>Template Selection Test</h1>
+    <p>Click templates below to test selection:</p>
+    
+    <div id="templateContainer">
+        <div class="template-card" data-template="standard">
+            🪙 Standard
+        </div>
+        <div class="template-card" data-template="mintable">
+            ➕ Mintable
+        </div>
+        <div class="template-card" data-template="burnable">
+            🔥 Burnable
+        </div>
+        <div class="template-card" data-template="tax">
+            💰 Tax
+        </div>
+    </div>
+    
+    <button id="continueBtn">Continue →</button>
+    
+    <div class="result" id="result"></div>
+
+    <script>
+        let selectedTemplate = null;
+        const resultDiv = document.getElementById('result');
+        
+        // Method 1: Event listeners (most reliable)
+        document.querySelectorAll('.template-card').forEach(card => {
+            card.addEventListener('click', function() {
+                console.log('CLICKED:', this.dataset.template);
+                
+                // Remove active from all
+                document.querySelectorAll('.template-card').forEach(c => {
+                    c.classList.remove('active');
+                });
+                
+                // Add to this one
+                this.classList.add('active');
+                
+                // Update variable
+                selectedTemplate = this.dataset.template;
+                
+                resultDiv.textContent = 'Selected: ' + selectedTemplate;
+                console.log('selectedTemplate =', selectedTemplate);
+            });
+        });
+        
+        document.getElementById('continueBtn').addEventListener('click', function() {
+            console.log('Continue clicked, selectedTemplate =', selectedTemplate);
+            
+            if (!selectedTemplate) {
+                alert('Please select a template!');
+            } else {
+                alert('✅ Proceeding with template: ' + selectedTemplate);
+            }
+        });
+    </script>
+</body>
+</html>

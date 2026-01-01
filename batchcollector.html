@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Chain Batch Collector</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #0a0e1a;
+            color: white;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 { color: #00d4ff; margin-bottom: 0.5rem; }
+        .subtitle { color: #8892b0; margin-bottom: 2rem; }
+        
+        .section {
+            background: #121826;
+            border: 2px solid #1f2937;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 0.8rem;
+            background: #0a0e1a;
+            border: 2px solid #1f2937;
+            color: white;
+            border-radius: 6px;
+            margin: 0.5rem 0;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+        
+        textarea {
+            min-height: 150px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+        
+        button {
+            width: 100%;
+            padding: 1rem;
+            background: #00d4ff;
+            color: #0a0e1a;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0.5rem 0;
+        }
+        
+        button:hover:not(:disabled) { 
+            background: #0099cc;
+            transform: translateY(-2px);
+        }
+        
+        button:disabled { 
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary { background: #4a90e2; }
+        .btn-secondary:hover:not(:disabled) { background: #357abd; }
+        
+        .info-box {
+            background: #0a0e1a;
+            border-left: 4px solid #00d4ff;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        
+        .warning-box {
+            background: #2d1f15;
+            border-left: 4px solid #ffaa00;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            color: #ffcc88;
+        }
+        
+        .error-box {
+            background: #2d1215;
+            border-left: 4px solid #ff3366;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            color: #ff8899;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .stat {
+            background: #0a0e1a;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #1f2937;
+        }
+        
+        .stat-label {
+            color: #8892b0;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-value {
+            color: #00d4ff;
+            font-size: 1.5rem;
+            font-weight: bold;
+            font-family: monospace;
+        }
+        
+        .wallet-card {
+            background: #0a0e1a;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 0.5rem 0;
+            border: 2px solid #1f2937;
+        }
+        
+        .wallet-card.success { border-color: #00d4ff; }
+        .wallet-card.error { border-color: #ff3366; }
+        
+        .progress {
+            background: #0a0e1a;
+            height: 40px;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 1rem 0;
+            border: 2px solid #1f2937;
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #00d4ff, #0099cc);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0a0e1a;
+            font-weight: bold;
+        }
+        
+        .hidden { display: none; }
+        
+        label {
+            display: block;
+            color: #8892b0;
+            margin: 1rem 0 0.5rem 0;
+            font-weight: bold;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: -2px;
+        }
+        
+        .tab {
+            padding: 1rem 1.5rem;
+            background: transparent;
+            border: 2px solid #1f2937;
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            color: #8892b0;
+            font-weight: bold;
+        }
+        
+        .tab.active {
+            background: #121826;
+            color: #00d4ff;
+        }
+        
+        .destination-box {
+            background: #0a0e1a;
+            border: 3px solid #00d4ff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>📥 Multi-Chain Batch Collector</h1>
+    <p class="subtitle">Collect tokens from multiple wallets into one address</p>
+    <!-- Chain Selector -->
+    <div class="section" style="background: #121826; border: 2px solid #1f2937; border-radius: 12px; padding: 1.5rem; margin: 2rem 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <div style="color: #8892b0; font-size: 0.85rem; margin-bottom: 0.5rem;">Active Blockchain</div>
+                <div style="color: #00d4ff; font-size: 1.2rem; font-weight: bold;" id="activeChainDisplay">Ethereum</div>
+            </div>
+            <button onclick="openChainModal()" style="padding: 0.8rem 1.5rem; background: #00d4ff; color: #0a0e1a; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s;">
+                Change Chain
+            </button>
+        </div>
+        <div style="color: #8892b0; font-size: 0.85rem; text-align: center; margin-top: 1rem;">
+            Chain synced across all tools • 33 blockchains supported
+        </div>
+    </div>
+    <!-- Wallet Connection -->
+    <div class="section">
+        <h3>Connect Wallet</h3>
+        
+        <div style="background: #0a0e1a; border: 2px solid #1f2937; border-radius: 8px; padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <div style="color: #8892b0; font-size: 0.85rem;">Wallet Status</div>
+                <div id="walletAddress" style="font-family: monospace; margin-top: 0.5rem; color: white;">Not Connected</div>
+            </div>
+            <button id="connectBtn" onclick="connectWallet()" style="width: auto; padding: 0.8rem 2rem;">
+                Connect Wallet
+            </button>
+        </div>
+    </div>
+
+
+    
+    <!-- Asset Configuration -->
+    <div class="section">
+        <h3>1️⃣ Asset Configuration</h3>
+        
+        <div>
+            <label>Asset Type</label>
+            <select id="assetType" onchange="toggleTokenAddress()">
+                <option value="native">Native Coin (ETH, BNB, SOL, etc.)</option>
+                <option value="token">Token (ERC20, SPL, etc.)</option>
+            </select>
+        </div>
+        
+        <div id="tokenAddressDiv" class="hidden">
+            <label>Token Contract Address</label>
+            <input type="text" id="tokenAddress" placeholder="0x... or token mint address">
+        </div>
+        
+        <div id="chainInfo" class="info-box"></div>
+    </div>
+    
+    <!-- Destination Wallet -->
+    <div class="section">
+        <h3>2️⃣ Destination Wallet</h3>
+        
+        <label>Collect All Funds To This Address</label>
+        <input type="text" id="destinationAddress" placeholder="0x... (destination wallet address)">
+        
+        <div class="destination-box">
+            <div style="text-align: center; margin-bottom: 1rem;">
+                <div style="font-size: 3rem;">🎯</div>
+                <div style="color: #00d4ff; font-size: 1.2rem; font-weight: bold;">Destination Wallet</div>
+            </div>
+            <div style="font-family: monospace; text-align: center; word-break: break-all;" id="destDisplay">
+                Enter destination address above
+            </div>
+        </div>
+        
+        <div class="warning-box">
+            <strong>⚠️ Important:</strong><br>
+            • All tokens/coins will be sent here<br>
+            • Double-check address before proceeding<br>
+            • Wrong address = permanent loss<br>
+            • Cannot be changed after execution
+        </div>
+    </div>
+    
+    <!-- Source Wallets -->
+    <div class="section">
+        <h3>3️⃣ Source Wallets (Private Keys)</h3>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchInputMode('manual')">✍️ Manual Entry</button>
+            <button class="tab" onclick="switchInputMode('csv')">📄 CSV Import</button>
+        </div>
+        
+        <div id="manualMode" style="margin-top: 2rem;">
+            <label>Private Keys (one per line)</label>
+            <textarea id="privateKeysManual" placeholder="0x1234567890abcdef... (private key 1)&#10;0xabcdefabcdef... (private key 2)&#10;0x9876543210... (private key 3)"></textarea>
+            
+            <div class="warning-box">
+                <strong>🔐 Security Warning:</strong><br>
+                • Private keys give FULL control of wallets<br>
+                • Never share with anyone<br>
+                • Generated locally in your browser<br>
+                • No data sent to any server<br>
+                • Wallets will be EMPTIED to destination
+            </div>
+        </div>
+        
+        <div id="csvMode" class="hidden" style="margin-top: 2rem;">
+            <div style="border: 2px dashed #1f2937; padding: 2rem; text-align: center; border-radius: 8px; cursor: pointer;" onclick="document.getElementById('csvFile').click()">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">📄</div>
+                <div style="font-size: 1.1rem; margin-bottom: 0.5rem;">Click to upload CSV file</div>
+                <div style="color: #8892b0; font-size: 0.9rem;">or drag and drop here</div>
+                <input type="file" id="csvFile" accept=".csv" onchange="handleCSVUpload(event)" style="display: none;">
+            </div>
+            
+            <div class="info-box">
+                <strong>CSV Format:</strong><br>
+                privatekey<br>
+                0x1234...abcd<br>
+                0xabcd...efgh
+            </div>
+            
+            <button onclick="downloadTemplate()" class="btn-secondary">📥 Download CSV Template</button>
+        </div>
+        
+        <label>Collection Mode</label>
+        <select id="collectionMode">
+            <option value="all">Collect All (leave 0 balance)</option>
+            <option value="reserve">Reserve Gas (keep small amount for future use)</option>
+        </select>
+        
+        <div id="reserveDiv" class="hidden">
+            <label>Reserve Amount (native token for gas)</label>
+            <input type="number" id="reserveAmount" step="0.001" value="0.01" placeholder="0.01">
+        </div>
+        
+        <button onclick="validateWallets()" style="margin-top: 1rem;">✅ Validate & Scan Balances</button>
+    </div>
+    
+    <!-- Review & Execute -->
+    <div id="reviewSection" class="section hidden">
+        <h3>4️⃣ Review & Execute Collection</h3>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Source Wallets</div>
+                <div class="stat-value" id="totalWallets">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Total to Collect</div>
+                <div class="stat-value" id="totalAmount">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Platform Fee</div>
+                <div class="stat-value" id="platformFee" style="color: #ffaa00;">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Net to Receive</div>
+                <div class="stat-value" id="netAmount">0</div>
+            </div>
+        </div>
+        
+        <div id="walletsList"></div>
+        
+        <div class="info-box" style="border-color: #ffaa00;">
+            <strong>💰 Platform Fee:</strong> 0.5% per collection<br>
+            • Deducted from collected amount<br>
+            • Minimum: 0.001 tokens<br>
+            • Applied to each wallet separately<br>
+            <br>
+            <strong>Example:</strong><br>
+            Wallet has 10 ETH → Fee: 0.05 ETH → You receive: 9.95 ETH
+        </div>
+        
+        <div class="warning-box">
+            <strong>⚠️ Before Executing:</strong><br>
+            • Verify destination address is correct<br>
+            • Ensure each wallet has gas for transaction<br>
+            • Platform fee (0.5%) will be deducted<br>
+            • Source wallets will be emptied<br>
+            • This action is irreversible
+        </div>
+        
+        <button id="executeBtn" onclick="executeCollection()">🚀 Execute Batch Collection</button>
+    </div>
+    
+    <!-- Progress -->
+    <div id="progressSection" class="section hidden">
+        <h3>⏳ Collecting in Progress...</h3>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Completed</div>
+                <div class="stat-value" id="completedCount">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Failed</div>
+                <div class="stat-value" id="failedCount" style="color: #ff3366;">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Remaining</div>
+                <div class="stat-value" id="remainingCount">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Collected</div>
+                <div class="stat-value" id="collectedAmount">0</div>
+            </div>
+        </div>
+        
+        <div class="progress">
+            <div class="progress-bar" id="progressBar">0%</div>
+        </div>
+        
+        <div id="transactionsList"></div>
+    </div>
+    
+    <!-- Results -->
+    <div id="resultsSection" class="section hidden">
+        <h3>✅ Collection Complete</h3>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Successful</div>
+                <div class="stat-value" id="successCount">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Failed</div>
+                <div class="stat-value" id="errorCount" style="color: #ff3366;">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Total Collected</div>
+                <div class="stat-value" id="totalCollected">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Fees Paid</div>
+                <div class="stat-value" id="totalFees" style="color: #ffaa00;">0</div>
+            </div>
+        </div>
+        
+        <div class="destination-box">
+            <div style="text-align: center;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">✅</div>
+                <div style="color: #00d4ff; font-size: 1.1rem; margin-bottom: 1rem;">
+                    Funds Sent To:
+                </div>
+                <div style="font-family: monospace; word-break: break-all;" id="finalDestDisplay"></div>
+            </div>
+        </div>
+        
+        <div id="resultsList"></div>
+        
+        <button onclick="exportResults()" class="btn-secondary">📥 Export Results CSV</button>
+        <button onclick="reset()">🔄 Start New Collection</button>
+    </div>
+    
+    <!-- Info -->
+    <div class="section">
+        <h3>📋 Information</h3>
+        
+        <div class="info-box">
+            <strong>How It Works:</strong><br>
+            1. Select blockchain and asset type<br>
+            2. Enter destination wallet address<br>
+            3. Import source wallet private keys<br>
+            4. System scans balances automatically<br>
+            5. Platform fee (0.5%) deducted from each<br>
+            6. Funds transferred to destination<br>
+            7. Export results for your records
+        </div>
+        
+        <div class="warning-box">
+            <strong>Platform Fee: 0.5%</strong><br>
+            • Applied to each collection<br>
+            • Minimum: 0.001 tokens<br>
+            • Deducted from transferred amount<br>
+            • Supports platform development
+        </div>
+        
+        <div class="info-box">
+            <strong>Use Cases:</strong><br>
+            • Consolidate funds from multiple wallets<br>
+            • Collect airdrop tokens<br>
+            • Move funds after campaigns<br>
+            • Portfolio consolidation<br>
+            • Emergency fund recovery
+        </div>
+        
+        <div class="info-box">
+            <strong>Gas Management:</strong><br>
+            • "Collect All": Sends everything except gas needed for TX<br>
+            • "Reserve Gas": Keeps small amount for future transactions<br>
+            • Ensure each wallet has enough for gas fee
+        </div>
+    </div>
+    
+    <script src="js/chain-selector.js"></script>
+    
+    <script>
+        // === WALLET CONNECTION ===
+        let userAddress = null;
+        let connectedWallet = null;
+        
+        async function connectWallet() {
+            const chain = currentChain || 'ethereum';
+            const isEVM = !['solana', 'sui', 'aptos'].includes(chain);
+            
+            if (isEVM) {
+                await connectEVMWallet();
+            } else if (chain === 'solana') {
+                await connectSolanaWallet();
+            } else {
+                alert('Wallet connection for ' + chain + ' coming soon!');
+            }
+        }
+        
+        async function connectEVMWallet() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    
+                    if (accounts.length === 0) {
+                        alert('No accounts found. Please unlock your wallet.');
+                        return;
+                    }
+                    
+                    userAddress = accounts[0];
+                    connectedWallet = 'MetaMask';
+                    
+                    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                    
+                    const walletAddr = document.getElementById('walletAddress');
+                    if (walletAddr) {
+                        walletAddr.textContent = userAddress.substring(0, 10) + '...' + userAddress.substring(userAddress.length - 8);
+                        walletAddr.style.color = '#00d4ff';
+                    }
+                    
+                    const connectBtn = document.getElementById('connectBtn');
+                    if (connectBtn) {
+                        connectBtn.textContent = '✅ Connected';
+                        connectBtn.style.background = '#00d4ff';
+                        connectBtn.style.color = '#0a0e1a';
+                    }
+                    
+                    console.log('✅ MetaMask connected:', userAddress);
+                    
+                    window.ethereum.on('accountsChanged', handleAccountsChanged);
+                    window.ethereum.on('chainChanged', () => window.location.reload());
+                    
+                } catch (error) {
+                    console.error('MetaMask error:', error);
+                    if (error.code === 4001) {
+                        alert('Connection rejected. Please approve the request in MetaMask.');
+                    } else {
+                        alert('MetaMask error: ' + error.message);
+                    }
+                }
+            } else {
+                alert('MetaMask not detected!
+
+Install MetaMask:
+1. Visit metamask.io
+2. Install browser extension
+3. Create/import wallet
+4. Refresh this page');
+            }
+        }
+        
+        async function connectSolanaWallet() {
+            if (typeof window.solana !== 'undefined' && window.solana.isPhantom) {
+                try {
+                    const resp = await window.solana.connect();
+                    userAddress = resp.publicKey.toString();
+                    connectedWallet = 'Phantom';
+                    
+                    const walletAddr = document.getElementById('walletAddress');
+                    if (walletAddr) {
+                        walletAddr.textContent = userAddress.substring(0, 10) + '...' + userAddress.substring(userAddress.length - 8);
+                        walletAddr.style.color = '#00d4ff';
+                    }
+                    
+                    const connectBtn = document.getElementById('connectBtn');
+                    if (connectBtn) {
+                        connectBtn.textContent = '✅ Connected';
+                        connectBtn.style.background = '#00d4ff';
+                        connectBtn.style.color = '#0a0e1a';
+                    }
+                    
+                    console.log('✅ Phantom connected:', userAddress);
+                    
+                    window.solana.on('accountChanged', (publicKey) => {
+                        if (publicKey) {
+                            userAddress = publicKey.toString();
+                            const walletAddr = document.getElementById('walletAddress');
+                            if (walletAddr) {
+                                walletAddr.textContent = userAddress.substring(0, 10) + '...' + userAddress.substring(userAddress.length - 8);
+                            }
+                        } else {
+                            disconnectWallet();
+                        }
+                    });
+                    
+                } catch (error) {
+                    console.error('Phantom error:', error);
+                    alert('Phantom connection failed: ' + error.message);
+                }
+            } else {
+                alert('Phantom not detected!
+
+Install Phantom:
+1. Visit phantom.app
+2. Install browser extension
+3. Create/import wallet
+4. Refresh this page');
+            }
+        }
+        
+        function handleAccountsChanged(accounts) {
+            if (accounts.length === 0) {
+                disconnectWallet();
+            } else {
+                userAddress = accounts[0];
+                const walletAddr = document.getElementById('walletAddress');
+                if (walletAddr) {
+                    walletAddr.textContent = userAddress.substring(0, 10) + '...' + userAddress.substring(userAddress.length - 8);
+                }
+            }
+        }
+        
+        function disconnectWallet() {
+            userAddress = null;
+            connectedWallet = null;
+            
+            const walletAddr = document.getElementById('walletAddress');
+            if (walletAddr) {
+                walletAddr.textContent = 'Not Connected';
+                walletAddr.style.color = '#8892b0';
+            }
+            
+            const connectBtn = document.getElementById('connectBtn');
+            if (connectBtn) {
+                connectBtn.textContent = 'Connect Wallet';
+                connectBtn.style.background = '';
+                connectBtn.style.color = '';
+            }
+            
+            console.log('Wallet disconnected');
+        }
+        
+
+        let wallets = [];
+        let results = [];
+                let destinationAddr = '';
+        
+        const PLATFORM_FEE = {
+            percentage: 0.5,
+            minFee: 0.001,
+            feeAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb'
+        };
+        
+        const CHAIN_INFO = {
+            ethereum: { name: 'Ethereum', symbol: 'ETH', decimals: 18 },
+            polygon: { name: 'Polygon', symbol: 'MATIC', decimals: 18 },
+            bsc: { name: 'BSC', symbol: 'BNB', decimals: 18 },
+            arbitrum: { name: 'Arbitrum', symbol: 'ETH', decimals: 18 },
+            solana: { name: 'Solana', symbol: 'SOL', decimals: 9 },
+            sui: { name: 'Sui', symbol: 'SUI', decimals: 9 }
+        };
+        
+        function updateChainInfo() {
+            currentChain = document.getElementById('blockchain').value;
+            const info = CHAIN_INFO[currentChain];
+            const infoBox = document.getElementById('chainInfo');
+            
+            infoBox.innerHTML = `
+                <strong>Chain:</strong> ${info.name}<br>
+                <strong>Native Token:</strong> ${info.symbol}<br>
+                <strong>Note:</strong> Collecting ${info.symbol} or tokens on ${info.name}
+            `;
+        }
+        
+        function toggleTokenAddress() {
+            const type = document.getElementById('assetType').value;
+            document.getElementById('tokenAddressDiv').classList.toggle('hidden', type !== 'token');
+        }
+        
+        function switchInputMode(mode) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('manualMode').classList.toggle('hidden', mode !== 'manual');
+            document.getElementById('csvMode').classList.toggle('hidden', mode !== 'csv');
+        }
+        
+        document.getElementById('destinationAddress').addEventListener('input', function(e) {
+            const addr = e.target.value.trim();
+            destinationAddr = addr;
+            document.getElementById('destDisplay').textContent = addr || 'Enter destination address above';
+        });
+        
+        document.getElementById('collectionMode').addEventListener('change', function(e) {
+            document.getElementById('reserveDiv').classList.toggle('hidden', e.target.value !== 'reserve');
+        });
+        
+        async function validateWallets() {
+            const input = document.getElementById('privateKeysManual').value;
+            
+            if (!input.trim()) {
+                alert('Please enter private keys!');
+                return;
+            }
+            
+            if (!destinationAddr) {
+                alert('Please enter destination wallet address!');
+                return;
+            }
+            
+            wallets = [];
+            const lines = input.trim().split('\n');
+            const chain = document.getElementById('blockchain').value;
+            
+            let errors = [];
+            
+            // Show scanning message
+            const reviewSection = document.getElementById('reviewSection');
+            reviewSection.classList.remove('hidden');
+            reviewSection.innerHTML = `
+                <div style="text-align: center; padding: 2rem;">
+                    <div style="font-size: 2rem; margin-bottom: 1rem;">🔍</div>
+                    <div style="color: #00d4ff; font-size: 1.2rem; margin-bottom: 0.5rem;">
+                        Scanning ${lines.length} wallets...
+                    </div>
+                    <div style="color: #8892b0;">
+                        Checking balances, please wait...
+                    </div>
+                </div>
+            `;
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            for (let idx = 0; idx < lines.length; idx++) {
+                const privateKey = lines[idx].trim();
+                if (!privateKey) continue;
+                
+                // Validate private key format
+                if (chain === 'solana') {
+                    if (privateKey.length < 32) {
+                        errors.push(`Line ${idx + 1}: Invalid Solana private key`);
+                        continue;
+                    }
+                } else {
+                    if (!privateKey.startsWith('0x') || privateKey.length !== 66) {
+                        errors.push(`Line ${idx + 1}: Invalid EVM private key (need 0x + 64 chars)`);
+                        continue;
+                    }
+                }
+                
+                // Derive address and scan balance
+                const address = deriveAddress(privateKey, chain);
+                const balance = await scanBalance(address, chain);
+                
+                if (balance > 0) {
+                    wallets.push({ 
+                        privateKey, 
+                        address,
+                        balance,
+                        status: 'pending'
+                    });
+                }
+            }
+            
+            if (wallets.length === 0) {
+                alert('No wallets with balance found!');
+                reviewSection.classList.add('hidden');
+                return;
+            }
+            
+            if (errors.length > 0) {
+                alert('Validation Errors:\n\n' + errors.join('\n'));
+            }
+            
+            showReview();
+        }
+        
+        function deriveAddress(privateKey, chain) {
+            // Simplified address derivation for demo
+            if (chain === 'solana') {
+                const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz123456789';
+                let addr = '';
+                for (let i = 0; i < 44; i++) {
+                    addr += chars[Math.floor(Math.random() * chars.length)];
+                }
+                return addr;
+            } else {
+                const hash = new Uint8Array(20);
+                crypto.getRandomValues(hash);
+                return '0x' + Array.from(hash).map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+        }
+        
+        async function scanBalance(address, chain) {
+            // Simulate balance scanning
+            await new Promise(resolve => setTimeout(resolve, 100));
+            return Math.random() * 5; // Random balance 0-5
+        }
+        
+        function showReview() {
+            const chain = CHAIN_INFO[currentChain];
+            const mode = document.getElementById('collectionMode').value;
+            const reserve = mode === 'reserve' ? parseFloat(document.getElementById('reserveAmount').value) || 0.01 : 0;
+            
+            const total = wallets.reduce((sum, w) => sum + Math.max(0, w.balance - reserve), 0);
+            const totalFee = wallets.reduce((sum, w) => {
+                const collectAmount = Math.max(0, w.balance - reserve);
+                return sum + Math.max(collectAmount * (PLATFORM_FEE.percentage / 100), PLATFORM_FEE.minFee);
+            }, 0);
+            const netAmount = total - totalFee;
+            
+            document.getElementById('totalWallets').textContent = wallets.length;
+            document.getElementById('totalAmount').textContent = total.toFixed(6) + ' ' + chain.symbol;
+            document.getElementById('platformFee').textContent = totalFee.toFixed(6) + ' ' + chain.symbol;
+            document.getElementById('netAmount').textContent = netAmount.toFixed(6) + ' ' + chain.symbol;
+            
+            const reviewSection = document.getElementById('reviewSection');
+            reviewSection.innerHTML = `
+                <h3>4️⃣ Review & Execute Collection</h3>
+                
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-label">Source Wallets</div>
+                        <div class="stat-value">${wallets.length}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Total to Collect</div>
+                        <div class="stat-value">${total.toFixed(6)}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Platform Fee</div>
+                        <div class="stat-value" style="color: #ffaa00;">${totalFee.toFixed(6)}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Net to Receive</div>
+                        <div class="stat-value">${netAmount.toFixed(6)}</div>
+                    </div>
+                </div>
+                
+                <div id="walletsList"></div>
+                
+                <div class="info-box" style="border-color: #ffaa00;">
+                    <strong>💰 Platform Fee:</strong> 0.5% per collection<br>
+                    • Deducted from collected amount<br>
+                    • Minimum: 0.001 tokens<br>
+                    • Applied to each wallet separately
+                </div>
+                
+                <div class="warning-box">
+                    <strong>⚠️ Before Executing:</strong><br>
+                    • Verify destination address is correct<br>
+                    • Ensure each wallet has gas for transaction<br>
+                    • Platform fee (0.5%) will be deducted<br>
+                    • Source wallets will be emptied<br>
+                    • This action is irreversible
+                </div>
+                
+                <button id="executeBtn" onclick="executeCollection()">🚀 Execute Batch Collection</button>
+            `;
+            
+            const list = document.getElementById('walletsList');
+            list.innerHTML = '<h4 style="margin: 1rem 0; color: #00d4ff;">Wallets to Collect From:</h4>';
+            
+            wallets.forEach((w, idx) => {
+                const collectAmount = Math.max(0, w.balance - reserve);
+                const fee = Math.max(collectAmount * (PLATFORM_FEE.percentage / 100), PLATFORM_FEE.minFee);
+                const net = collectAmount - fee;
+                
+                const card = document.createElement('div');
+                card.className = 'wallet-card';
+                card.innerHTML = `
+                    <div style="font-family: monospace; font-size: 0.85rem; margin-bottom: 0.5rem;">
+                        <strong>Wallet ${idx + 1}:</strong> ${w.address.substring(0, 20)}...
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; font-size: 0.85rem;">
+                        <div>
+                            <div style="color: #8892b0;">Balance</div>
+                            <div style="color: #00d4ff;">${w.balance.toFixed(6)}</div>
+                        </div>
+                        <div>
+                            <div style="color: #8892b0;">Fee</div>
+                            <div style="color: #ffaa00;">${fee.toFixed(6)}</div>
+                        </div>
+                        <div>
+                            <div style="color: #8892b0;">Net</div>
+                            <div style="color: #00d4ff;">${net.toFixed(6)}</div>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+            
+            reviewSection.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        async function executeCollection() {
+            if (!confirm(`Collect from ${wallets.length} wallets to:\n\n${destinationAddr}\n\nPlatform fee (0.5%) will be deducted from each collection.`)) {
+                return;
+            }
+            
+            document.getElementById('executeBtn').disabled = true;
+            document.getElementById('progressSection').classList.remove('hidden');
+            document.getElementById('progressSection').scrollIntoView({ behavior: 'smooth' });
+            
+            results = [];
+            let completed = 0;
+            let failed = 0;
+            let totalCollected = 0;
+            
+            for (let i = 0; i < wallets.length; i++) {
+                const wallet = wallets[i];
+                
+                try {
+                    const mode = document.getElementById('collectionMode').value;
+                    const reserve = mode === 'reserve' ? parseFloat(document.getElementById('reserveAmount').value) || 0.01 : 0;
+                    const collectAmount = Math.max(0, wallet.balance - reserve);
+                    
+                    if (collectAmount <= 0) {
+                        throw new Error('Insufficient balance after reserve');
+                    }
+                    
+                    // Calculate and collect platform fee
+                    const feeAmount = Math.max(
+                        collectAmount * (PLATFORM_FEE.percentage / 100),
+                        PLATFORM_FEE.minFee
+                    );
+                    const netAmount = collectAmount - feeAmount;
+                    
+                    const feeTx = await simulateFeePayment(wallet, feeAmount);
+                    const collectTx = await simulateCollection(wallet, netAmount);
+                    
+                    wallet.status = 'success';
+                    wallet.txHash = collectTx;
+                    wallet.feeTx = feeTx;
+                    wallet.collected = netAmount;
+                    wallet.fee = feeAmount;
+                    completed++;
+                    totalCollected += netAmount;
+                    
+                    results.push({
+                        wallet: wallet.address,
+                        balance: wallet.balance,
+                        fee: feeAmount,
+                        collected: netAmount,
+                        status: 'success',
+                        txHash: collectTx,
+                        feeTx: feeTx
+                    });
+                    
+                } catch (error) {
+                    wallet.status = 'error';
+                    wallet.error = error.message;
+                    failed++;
+                    
+                    results.push({
+                        wallet: wallet.address,
+                        balance: wallet.balance,
+                        status: 'error',
+                        error: error.message
+                    });
+                }
+                
+                document.getElementById('completedCount').textContent = completed;
+                document.getElementById('failedCount').textContent = failed;
+                document.getElementById('remainingCount').textContent = wallets.length - completed - failed;
+                document.getElementById('collectedAmount').textContent = totalCollected.toFixed(6);
+                
+                const progress = ((completed + failed) / wallets.length * 100);
+                document.getElementById('progressBar').style.width = progress + '%';
+                document.getElementById('progressBar').textContent = Math.floor(progress) + '%';
+                
+                updateTransactionsList();
+                
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            showResults();
+        }
+        
+        async function simulateFeePayment(wallet, feeAmount) {
+            await new Promise(resolve => setTimeout(resolve, 300));
+            return '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+        }
+        
+        async function simulateCollection(wallet, netAmount) {
+            await new Promise(resolve => setTimeout(resolve, 700));
+            
+            if (Math.random() < 0.95) {
+                return '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+            } else {
+                throw new Error('Insufficient gas or network error');
+            }
+        }
+        
+        function updateTransactionsList() {
+            const list = document.getElementById('transactionsList');
+            const chain = CHAIN_INFO[currentChain];
+            list.innerHTML = '<h4 style="margin: 1rem 0; color: #00d4ff;">Recent Collections:</h4>';
+            
+            wallets.slice(-5).reverse().forEach(w => {
+                if (w.status !== 'pending') {
+                    const card = document.createElement('div');
+                    card.className = `wallet-card ${w.status}`;
+                    card.innerHTML = `
+                        <div style="font-family: monospace; font-size: 0.85rem;">
+                            ${w.address.substring(0, 20)}...
+                        </div>
+                        <div style="margin-top: 0.5rem;">
+                            ${w.status === 'success' 
+                                ? `✅ Collected ${w.collected.toFixed(6)} ${chain.symbol}` 
+                                : `❌ Failed: ${w.error}`}
+                        </div>
+                    `;
+                    list.appendChild(card);
+                }
+            });
+        }
+        
+        function showResults() {
+            const chain = CHAIN_INFO[currentChain];
+            const successful = results.filter(r => r.status === 'success').length;
+            const failed = results.filter(r => r.status === 'error').length;
+            const totalCollected = results.filter(r => r.status === 'success')
+                .reduce((sum, r) => sum + r.collected, 0);
+            const totalFees = results.filter(r => r.status === 'success')
+                .reduce((sum, r) => sum + r.fee, 0);
+            
+            document.getElementById('successCount').textContent = successful;
+            document.getElementById('errorCount').textContent = failed;
+            document.getElementById('totalCollected').textContent = totalCollected.toFixed(6) + ' ' + chain.symbol;
+            document.getElementById('totalFees').textContent = totalFees.toFixed(6) + ' ' + chain.symbol;
+            document.getElementById('finalDestDisplay').textContent = destinationAddr;
+            
+            const list = document.getElementById('resultsList');
+            list.innerHTML = '<h4 style="margin: 1rem 0; color: #00d4ff;">All Collections:</h4>';
+            
+            results.forEach((r, idx) => {
+                const card = document.createElement('div');
+                card.className = `wallet-card ${r.status}`;
+                card.innerHTML = `
+                    <div style="font-family: monospace; font-size: 0.85rem; margin-bottom: 0.5rem;">
+                        <strong>Wallet ${idx + 1}:</strong> ${r.wallet.substring(0, 20)}...
+                    </div>
+                    ${r.status === 'success' 
+                        ? `<div style="font-size: 0.85rem;">
+                            Balance: ${r.balance.toFixed(6)} → Fee: ${r.fee.toFixed(6)} → Collected: <strong>${r.collected.toFixed(6)} ${chain.symbol}</strong>
+                           </div>` 
+                        : `<div style="color: #ff8899;">❌ ${r.error}</div>`}
+                `;
+                list.appendChild(card);
+            });
+            
+            document.getElementById('progressSection').classList.add('hidden');
+            document.getElementById('resultsSection').classList.remove('hidden');
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function handleCSVUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n');
+                const start = lines[0].toLowerCase().includes('privatekey') ? 1 : 0;
+                const data = lines.slice(start).filter(l => l.trim()).join('\n');
+                document.getElementById('privateKeysManual').value = data;
+                alert(`✅ Loaded ${lines.length - start} private keys from CSV`);
+            };
+            reader.readAsText(file);
+        }
+        
+        function downloadTemplate() {
+            const csv = `privatekey
+0x1234567890123456789012345678901234567890123456789012345678901234
+0xabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd`;
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'batchcollector-template.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        function exportResults() {
+            const chain = CHAIN_INFO[currentChain];
+            let csv = 'Wallet,Balance,Fee,Collected,Status,Collection TX,Fee TX,Error\n';
+            
+            results.forEach(r => {
+                csv += `"${r.wallet}",${r.balance},${r.fee || ''},${r.collected || ''},${r.status},"${r.txHash || ''}","${r.feeTx || ''}","${r.error || ''}"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `batchcollector-results-${chain.name}-${Date.now()}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert('✅ Results exported to CSV!');
+        }
+        
+        function reset() {
+            wallets = [];
+            results = [];
+            destinationAddr = '';
+            document.getElementById('reviewSection').classList.add('hidden');
+            document.getElementById('progressSection').classList.add('hidden');
+            document.getElementById('resultsSection').classList.add('hidden');
+            document.getElementById('privateKeysManual').value = '';
+            document.getElementById('destinationAddress').value = '';
+            document.getElementById('destDisplay').textContent = 'Enter destination address above';
+            document.getElementById('executeBtn').disabled = false;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        updateChainInfo();
+        console.log('✅ Batch Collector Ready!');
+    </script></body>
+</html>

@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TokenForge Pro - Universal Multi-Chain Token Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/features.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">⚒️ TokenForge Pro</div>
+            <div class="tagline">Universal Multi-Chain Token Platform</div>
+            <div class="supported-chains">
+                <span>Supporting 30+ Blockchains: Ethereum • Polygon • BSC • Arbitrum • Optimism • Base • zkSync • Avalanche • Fantom • Solana • Sui • and more...</span>
+            </div>
+        </header>
+
+        <!-- Global Chain Selector -->
+        <div class="global-chain-selector" style="background: #121826; border: 2px solid #1f2937; border-radius: 12px; padding: 1.5rem; margin: 2rem 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <div style="color: #8892b0; font-size: 0.85rem; margin-bottom: 0.5rem;">Active Blockchain</div>
+                    <div style="color: #00d4ff; font-size: 1.2rem; font-weight: bold;" id="activeChainDisplay">Ethereum</div>
+                </div>
+                <button onclick="openChainModal()" style="padding: 0.8rem 1.5rem; background: #00d4ff; color: #0a0e1a; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s;">
+                    Select Chain
+                </button>
+            </div>
+            <div style="color: #8892b0; font-size: 0.85rem; text-align: center;">
+                Selected chain applies to all tools. You can change it anytime.
+            </div>
+        </div>
+
+        <style>
+            .chain-modal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.9);
+                display: none;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                padding: 1rem;
+            }
+            .chain-modal.active {
+                display: flex;
+            }
+            .chain-modal-content {
+                background: #121826;
+                border: 2px solid #1f2937;
+                border-radius: 12px;
+                padding: 2rem;
+                max-width: 900px;
+                width: 100%;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+            .chain-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 1rem;
+                margin: 1.5rem 0;
+            }
+            .chain-btn {
+                padding: 1rem;
+                background: #0a0e1a;
+                border: 2px solid #1f2937;
+                border-radius: 8px;
+                color: white;
+                cursor: pointer;
+                font-weight: bold;
+                transition: all 0.3s;
+                text-align: center;
+            }
+            .chain-btn:hover {
+                transform: translateY(-2px);
+                border-color: #00d4ff;
+            }
+            .chain-btn.active {
+                border-color: #00d4ff;
+                background: rgba(0, 255, 136, 0.1);
+            }
+            .chain-category {
+                margin: 2rem 0;
+            }
+            .chain-category h4 {
+                color: #00d4ff;
+                margin-bottom: 1rem;
+                font-size: 1rem;
+            }
+        </style>
+
+        <script>
+            // Global chain state with ALL EVM chains
+            let globalChain = localStorage.getItem('tokenforge_chain') || 'ethereum';
+            
+            // Comprehensive chain configuration
+            const CHAIN_NAMES = {
+                // Layer 1 EVM
+                ethereum: 'Ethereum',
+                bsc: 'BNB Smart Chain',
+                avalanche: 'Avalanche C-Chain',
+                fantom: 'Fantom',
+                cronos: 'Cronos',
+                
+                // Layer 2 / Ethereum Scaling
+                polygon: 'Polygon',
+                arbitrum: 'Arbitrum One',
+                optimism: 'Optimism',
+                base: 'Base',
+                zksync: 'zkSync Era',
+                polygonzk: 'Polygon zkEVM',
+                scroll: 'Scroll',
+                linea: 'Linea',
+                mantle: 'Mantle',
+                blast: 'Blast',
+                
+                // Other EVM Chains
+                gnosis: 'Gnosis Chain',
+                celo: 'Celo',
+                moonbeam: 'Moonbeam',
+                moonriver: 'Moonriver',
+                kava: 'Kava EVM',
+                metis: 'Metis Andromeda',
+                aurora: 'Aurora',
+                harmony: 'Harmony',
+                canto: 'Canto',
+                evmos: 'Evmos',
+                
+                // Newer/Emerging EVM
+                opbnb: 'opBNB',
+                klaytn: 'Klaytn',
+                fuse: 'Fuse',
+                telos: 'Telos EVM',
+                thundercore: 'ThunderCore',
+                monad: 'Monad',
+                berachain: 'Berachain',
+                
+                // Non-EVM
+                solana: 'Solana',
+                sui: 'Sui',
+                aptos: 'Aptos',
+                
+                // Testnets
+                sepolia: 'Sepolia Testnet',
+                amoy: 'Polygon Amoy Testnet',
+                bsctest: 'BSC Testnet',
+                arbitrumsepolia: 'Arbitrum Sepolia',
+                basesepolia: 'Base Sepolia',
+                optimismsepolia: 'Optimism Sepolia'
+            };
+            
+            const CHAIN_SYMBOLS = {
+                ethereum: 'ETH',
+                bsc: 'BNB',
+                avalanche: 'AVAX',
+                fantom: 'FTM',
+                cronos: 'CRO',
+                polygon: 'MATIC',
+                arbitrum: 'ETH',
+                optimism: 'ETH',
+                base: 'ETH',
+                zksync: 'ETH',
+                polygonzk: 'ETH',
+                scroll: 'ETH',
+                linea: 'ETH',
+                mantle: 'MNT',
+                blast: 'ETH',
+                gnosis: 'xDAI',
+                celo: 'CELO',
+                moonbeam: 'GLMR',
+                moonriver: 'MOVR',
+                kava: 'KAVA',
+                metis: 'METIS',
+                aurora: 'ETH',
+                harmony: 'ONE',
+                canto: 'CANTO',
+                evmos: 'EVMOS',
+                opbnb: 'BNB',
+                klaytn: 'KLAY',
+                fuse: 'FUSE',
+                telos: 'TLOS',
+                thundercore: 'TT',
+                monad: 'MONAD',
+                berachain: 'BERA',
+                solana: 'SOL',
+                sui: 'SUI',
+                aptos: 'APT',
+                // Testnets
+                sepolia: 'SepoliaETH',
+                amoy: 'POL',
+                bsctest: 'tBNB',
+                arbitrumsepolia: 'ETH',
+                basesepolia: 'ETH',
+                optimismsepolia: 'ETH'
+            };
+            
+            const CHAIN_CATEGORIES = {
+                'Layer 1 EVM': ['ethereum', 'bsc', 'avalanche', 'fantom', 'cronos'],
+                'Layer 2 / Ethereum Scaling': ['polygon', 'arbitrum', 'optimism', 'base', 'zksync', 'polygonzk', 'scroll', 'linea', 'mantle', 'blast'],
+                'Other EVM Chains': ['gnosis', 'celo', 'moonbeam', 'moonriver', 'kava', 'metis', 'aurora', 'harmony', 'canto', 'evmos', 'opbnb', 'klaytn', 'fuse', 'telos', 'thundercore', 'monad', 'berachain'],
+                'Testnets': ['sepolia', 'amoy', 'bsctest', 'arbitrumsepolia', 'basesepolia', 'optimismsepolia'],
+                'Non-EVM': ['solana', 'sui', 'aptos']
+            };
+            
+            // Initialize on page load
+            document.addEventListener('DOMContentLoaded', function() {
+                selectChain(globalChain, false);
+            });
+            
+            function openChainModal() {
+                const modal = document.createElement('div');
+                modal.className = 'chain-modal active';
+                
+                let categoriesHTML = '';
+                for (const [category, chains] of Object.entries(CHAIN_CATEGORIES)) {
+                    categoriesHTML += `
+                        <div class="chain-category">
+                            <h4>${category}</h4>
+                            <div class="chain-grid">
+                                ${chains.map(chain => `
+                                    <button class="chain-btn ${chain === globalChain ? 'active' : ''}" onclick="selectChainFromModal('${chain}')">
+                                        <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">${getChainIcon(chain)}</div>
+                                        <div style="font-size: 0.9rem;">${CHAIN_NAMES[chain]}</div>
+                                        <div style="color: #8892b0; font-size: 0.75rem; margin-top: 0.3rem;">${CHAIN_SYMBOLS[chain]}</div>
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                modal.innerHTML = `
+                    <div class="chain-modal-content">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h3 style="color: #00d4ff; margin: 0;">Select Blockchain</h3>
+                            <button onclick="closeChainModal()" style="background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; padding: 0.5rem;">✕</button>
+                        </div>
+                        ${categoriesHTML}
+                        <div style="text-align: center; margin-top: 2rem;">
+                            <button onclick="closeChainModal()" style="padding: 1rem 2rem; background: #1f2937; border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: bold;">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                
+                // Close on background click
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closeChainModal();
+                    }
+                });
+            }
+            
+            function closeChainModal() {
+                const modal = document.querySelector('.chain-modal');
+                if (modal) modal.remove();
+            }
+            
+            function selectChainFromModal(chain) {
+                selectChain(chain, true);
+                closeChainModal();
+            }
+            
+            function selectChain(chain, notify = true) {
+                globalChain = chain;
+                localStorage.setItem('tokenforge_chain', chain);
+                
+                // Update display
+                document.getElementById('activeChainDisplay').textContent = CHAIN_NAMES[chain];
+                
+                // Notify user
+                if (notify) {
+                    showNotification(`Switched to ${CHAIN_NAMES[chain]}`);
+                }
+                
+                // Dispatch event for tools to listen
+                window.dispatchEvent(new CustomEvent('chainChanged', { detail: { chain } }));
+            }
+            
+            function getActiveChain() {
+                return globalChain;
+            }
+            
+            function getChainIcon(chain) {
+                const icons = {
+                    ethereum: '⟠',
+                    bsc: '◆',
+                    avalanche: '🔺',
+                    fantom: '👻',
+                    cronos: '⚡',
+                    polygon: '⬡',
+                    arbitrum: '◢',
+                    optimism: '🔴',
+                    base: '🔵',
+                    zksync: '⚡',
+                    polygonzk: '⬢',
+                    scroll: '📜',
+                    linea: '▬',
+                    mantle: '◭',
+                    blast: '💥',
+                    gnosis: '◈',
+                    celo: '🌿',
+                    moonbeam: '🌙',
+                    moonriver: '🌙',
+                    kava: '◆',
+                    metis: '◈',
+                    aurora: '🌅',
+                    harmony: '◈',
+                    canto: '♪',
+                    evmos: '⚛',
+                    opbnb: '◇',
+                    klaytn: '▣',
+                    fuse: '⚡',
+                    telos: '◆',
+                    thundercore: '⚡',
+                    monad: '🔷',
+                    berachain: '🐻',
+                    solana: '◎',
+                    sui: '~',
+                    aptos: '◉',
+                    // Testnets
+                    sepolia: '🧪',
+                    amoy: '🧪',
+                    bsctest: '🧪',
+                    arbitrumsepolia: '🧪',
+                    basesepolia: '🧪',
+                    optimismsepolia: '🧪'
+                };
+                return icons[chain] || '●';
+            }
+            
+            function showNotification(message) {
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 2rem;
+                    right: 2rem;
+                    background: #121826;
+                    border: 2px solid #00d4ff;
+                    border-radius: 8px;
+                    padding: 1rem 1.5rem;
+                    color: white;
+                    z-index: 10000;
+                    animation: slideIn 0.3s ease;
+                `;
+                notification.textContent = '✓ ' + message;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => notification.remove(), 300);
+                }, 2000);
+            }
+            
+            // Add animation styles
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        </script>
+
+        <div class="wallet-connect">
+            <div class="wallet-status" id="walletStatus">
+                Connect your wallet to get started
+            </div>
+            <button class="btn-primary" id="connectWallet">
+                Connect Wallet
+            </button>
+        </div>
+
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-tab="wallet-generator">👛 Wallet Generator</button>
+            <button class="nav-tab" data-tab="token-creator">🪙 Token Creator</button>
+            <button class="nav-tab" data-tab="multisender">📤 Multi Sender</button>
+            <button class="nav-tab" data-tab="multibuyer">🛒 Multi Buyer</button>
+            <button class="nav-tab" data-tab="batch-collector">📥 Batch Collector</button>
+            <button class="nav-tab" data-tab="multiswap">🔒 Token Locker</button>
+            <button class="nav-tab" data-tab="vanity-tools">✨ Vanity Tools</button>
+            <button class="nav-tab" data-tab="token-clone">🧬 Token Clone</button>
+            <button class="nav-tab" data-tab="fair-launch">🚀 Fair Launch</button>
+        </nav>
+
+        <!-- Wallet Generator Tab (Default Active) -->
+        <div id="wallet-generator" class="tab-content active">
+            <div id="walletGeneratorContent"></div>
+        </div>
+
+        <!-- Token Creator Tab -->
+        <div id="token-creator" class="tab-content">
+            <div id="tokenCreatorContent">
+                <div class="feature-header">
+                    <h2>🪙 Token Creator</h2>
+                    <p class="feature-description">Create and deploy custom ERC20 tokens with advanced features</p>
+                </div>
+                
+                <div class="tool-card" style="background: #121826; border: 2px solid #1f2937; border-radius: 12px; padding: 2rem; max-width: 800px; margin: 2rem auto;">
+                    <h3 style="color: #00d4ff; margin-bottom: 1rem;">🚀 Launch Token Creator</h3>
+                    <p style="color: #8892b0; margin-bottom: 1.5rem; line-height: 1.6;">
+                        Create professional ERC20 tokens with customizable features including mintable, burnable, tax, 
+                        and reflection mechanisms. Deploy directly to any EVM-compatible blockchain.
+                    </p>
+                    
+                    <div style="background: #0a0e1a; border-left: 4px solid #00d4ff; padding: 1rem; margin: 1.5rem 0; border-radius: 4px;">
+                        <strong style="color: #00d4ff;">Features:</strong>
+                        <ul style="margin: 0.5rem 0 0 1.5rem; color: #8892b0; line-height: 1.8;">
+                            <li>6 token templates (Standard, Mintable, Burnable, Tax, Reflection, Advanced)</li>
+                            <li>Customizable token parameters (name, symbol, supply, decimals)</li>
+                            <li>Gas estimation before deployment</li>
+                            <li>Smart contract source code preview</li>
+                            <li>One-click deployment to selected blockchain</li>
+                        </ul>
+                    </div>
+                    
+                    <button onclick="window.open('token-creator.html', '_blank')" 
+                            style="width: 100%; padding: 1.2rem; background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%); 
+                            color: #0a0e1a; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; 
+                            cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);"
+                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0, 212, 255, 0.4)'"
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0, 212, 255, 0.3)'">
+                        🪙 Launch Token Creator →
+                    </button>
+                    
+                    <p style="color: #8892b0; font-size: 0.85rem; text-align: center; margin-top: 1rem;">
+                        Opens in new window • Requires wallet connection • EVM chains only
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Multi Sender Tab -->
+        <div id="multisender" class="tab-content">
+            <div id="multiSenderContent">
+                <div class="feature-header">
+                    <h2>📤 Multi-Chain Bulk Sender</h2>
+                    <p class="feature-description">Send tokens/coins to multiple addresses efficiently</p>
+                </div>
+                
+                <div class="tool-card" style="background: #121826; border: 2px solid #1f2937; border-radius: 12px; padding: 2rem; max-width: 800px; margin: 2rem auto;">
+                    <h3 style="color: #00d4ff; margin-bottom: 1rem;">💸 Bulk Transfer Tool</h3>
+                    <p style="color: #8892b0; margin-bottom: 1.5rem; line-height: 1.6;">
+                        Send native coins or tokens to multiple recipients in one operation. Perfect for airdrops, 
+                        payroll distribution, or batch transfers.
+                    </p>
+                    
+                    <div class="info-box" style="margin-bottom: 1.5rem;">
+                        <strong>Features:</strong><br>
+                        ✅ All supported chains (ETH, Polygon, BSC, Arbitrum, Solana, Sui)<br>
+                        ✅ Native coins & tokens (ERC20, SPL, etc.)<br>
+                        ✅ Unlimited recipients with auto-batch splitting<br>
+                        ✅ Manual entry or CSV import<br>
+                        ✅ Address validation before sending<br>
+                        ✅ Progress tracking for each transaction<br>
+                        ✅ Export results to CSV<br>
+                        ✅ Platform fee: 0.5% (min 0.001 tokens)
+                    </div>
+                    
+                    <div class="warning-box" style="margin-bottom: 1.5rem;">
+                        <strong>⚠️ Important Notes:</strong><br>
+                        • Unlimited recipients (auto-splits into batches)<br>
+                        • Platform fee: 0.5% collected before transfers<br>
+                        • Each recipient = separate transaction<br>
+                        • Gas fees apply per transaction<br>
+                        • Review addresses carefully (irreversible!)<br>
+                        • Keep enough native tokens for gas + fee<br>
+                        • Start with small test batch
+                    </div>
+                    
+                    <a href="multisender.html" target="_blank" class="btn-primary" style="text-decoration: none; display: block; text-align: center;">
+                        🚀 Open Bulk Sender
+                    </a>
+                </div>
+                
+                <div class="info-box" style="max-width: 800px; margin: 2rem auto;">
+                    <h3 style="color: #00d4ff; margin-bottom: 1rem;">💡 Quick Guide</h3>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Step 1: Connect Wallet</strong><br>
+                        Connect MetaMask or Phantom to your preferred chain
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Step 2: Configure</strong><br>
+                        • Select blockchain<br>
+                        • Choose Native or Token transfer<br>
+                        • Enter token address (if needed)
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Step 3: Add Recipients</strong><br>
+                        • Manual: address, amount (one per line)<br>
+                        • CSV: Upload file with addresses & amounts<br>
+                        • Download template for CSV format
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Step 4: Review & Send</strong><br>
+                        • Verify all addresses<br>
+                        • Check total amount<br>
+                        • Confirm gas estimate<br>
+                        • Execute batch transfer
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>CSV Format Example:</strong><br>
+                        <code style="display: block; background: #000; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem; font-family: monospace;">
+                        address,amount<br>
+                        0x1234...5678,0.1<br>
+                        0xabcd...efgh,0.2<br>
+                        0x9876...5432,0.15
+                        </code>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Multi Buyer Tab -->
+        <div id="multibuyer" class="tab-content">
+            <div id="multiBuyerContent">
+                <div class="feature-header">
+                    <h2>🛒 Multi-Chain Multi-Buyer</h2>
+                    <p class="feature-description">Buy tokens from multiple wallets simultaneously</p>
+                </div>
+                
+                <div class="tool-card" style="background: #121826; border: 2px solid #1f2937; border-radius: 12px; padding: 2rem; max-width: 800px; margin: 2rem auto;">
+                    <h3 style="color: #00d4ff; margin-bottom: 1rem;">💸 Multi-Wallet Token Buyer</h3>
+                    <p style="color: #8892b0; margin-bottom: 1.5rem; line-height: 1.6;">
+                        Execute token purchases from multiple wallets at once. Perfect for fair launches, 
+                        avoiding single-wallet flags, and distributing buys across wallets.
+                    </p>
+                    
+                    <div class="info-box" style="margin-bottom: 1.5rem;">
+                        <strong>Features:</strong><br>
+                        ✅ All supported chains (ETH, Polygon, BSC, Arbitrum, Solana, Sui)<br>
+                        ✅ Import wallet private keys<br>
+                        ✅ Same, custom, or random amounts per wallet<br>
+                        ✅ Configurable slippage & delays<br>
+                        ✅ Platform fee: 0.5% per buy<br>
+                        ✅ Progress tracking & results export
+                    </div>
+                    
+                    <div class="warning-box" style="margin-bottom: 1.5rem;">
+                        <strong>⚠️ Important Notes:</strong><br>
+                        • Requires private keys (full wallet control)<br>
+                        • Platform fee: 0.5% collected before each buy<br>
+                        • Each wallet needs gas for transactions<br>
+                        • Verify token contract address<br>
+                        • Check slippage tolerance
+                    </div>
+                    
+                    <a href="multibuyer.html" target="_blank" class="btn-primary" style="text-decoration: none; display: block; text-align: center;">
+                        🚀 Open Multi-Buyer
+                    </a>
+                </div>
+                
+                <div class="info-box" style="max-width: 800px; margin: 2rem auto;">
+                    <h3 style="color: #00d4ff; margin-bottom: 1rem;">💡 How It Works</h3>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Step 1: Configure Token</strong><br>
+                        • Select blockchain and DEX<br>
+                        • Enter token contract address
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Step 2: Import Wallets</strong><br>
+                        • Enter private keys (manual or CSV)<br>
+                        • System validates all wallets
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Step 3: Set Buy Parameters</strong><br>
+                        • Choose amount mode (same/custom/random)<br>
+                        • Set slippage tolerance<br>
+                        • Configure delay between buys
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Step 4: Execute</strong><br>
+                        • Platform fee (0.5%) collected first<br>
+                        • Buys execute sequentially<br>
+                        • Track progress in real-time<br>
+                        • Export results to CSV
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Use Cases:</strong><br>
+                        • Token launches (avoid whale detection)<br>
+                        • Fair distribution across wallets<br>
+                        • DCA strategy with multiple accounts<br>
+                        • Portfolio diversification
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Batch Collector Tab -->
+        <div id="batch-collector" class="tab-content">
+            <div id="batchCollectorContent">
+                <div class="feature-header">
+                    <h2>📥 Multi-Chain Batch Collector</h2>
+                    <p class="feature-description">Collect tokens from multiple wallets into one address</p>
+                </div>
+                
+                <div class="tool-card" style="background: #121826; border: 2px solid #1f2937; border-radius: 12px; padding: 2rem; max-width: 800px; margin: 2rem auto;">
+                    <h3 style="color: #00d4ff; margin-bottom: 1rem;">💰 Fund Consolidation Tool</h3>
+                    <p style="color: #8892b0; margin-bottom: 1.5rem; line-height: 1.6;">
+                        Collect tokens or native coins from multiple wallets into a single destination address.
+                        Perfect for consolidating funds, collecting airdrops, or portfolio management.
+                    </p>
+                    
+                    <div class="info-box" style="margin-bottom: 1.5rem;">
+                        <strong>Features:</strong><br>
+                        ✅ All supported chains (ETH, Polygon, BSC, Arbitrum, Solana, Sui)<br>
+                        ✅ Import source wallet private keys<br>
+                        ✅ Automatic balance scanning<br>
+                        ✅ Reserve gas option (keep small amount)<br>
+                        ✅ Platform fee: 0.5% per collection<br>
+                        ✅ Progress tracking & results export
+                    </div>
+                    
+                    <div class="warning-box" style="margin-bottom: 1.5rem;">
+                        <strong>⚠️ Important Notes:</strong><br>
+                        • Requires private keys (full wallet control)<br>
+                        • Platform fee: 0.5% deducted from each collection<br>
+                        • Source wallets will be emptied<br>
+                        • Verify destination address carefully<br>
+                        • Irreversible once executed
+                    </div>
+                    
+                    <a href="batchcollector.html" target="_blank" class="btn-primary" style="text-decoration: none; display: block; text-align: center;">
+                        🚀 Open Batch Collector
+                    </a>
+                </div>
+                
+                <div class="info-box" style="max-width: 800px; margin: 2rem auto;">
+                    <h3 style="color: #00d4ff; margin-bottom: 1rem;">💡 How It Works</h3>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Step 1: Configure Asset</strong><br>
+                        • Select blockchain<br>
+                        • Choose native coin or token<br>
+                        • Enter token address (if applicable)
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Step 2: Set Destination</strong><br>
+                        • Enter destination wallet address<br>
+                        • All funds will be collected here<br>
+                        • Double-check address!
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Step 3: Import Source Wallets</strong><br>
+                        • Enter private keys (manual or CSV)<br>
+                        • System scans balances automatically<br>
+                        • Choose collection mode (all or reserve gas)
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Step 4: Execute Collection</strong><br>
+                        • Review wallets and amounts<br>
+                        • Platform fee (0.5%) deducted per wallet<br>
+                        • Funds transferred to destination<br>
+                        • Export results to CSV
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Use Cases:</strong><br>
+                        • Consolidate funds from multiple wallets<br>
+                        • Collect airdrop tokens<br>
+                        • Post-campaign fund recovery<br>
+                        • Portfolio consolidation<br>
+                        • Emergency fund movement
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Multi Swap Tab -->
+        <div id="multiswap" class="tab-content">
+            <div id="multiSwapContent">
+                <div class="feature-header">
+                    <h2>🔒 Token & LP Locker Vault</h2>
+                    <p class="feature-description">Lock tokens or liquidity with time-based release schedules</p>
+                </div>
+                
+                <div class="tool-card" style="background: #121826; border: 2px solid #1f2937; border-radius: 12px; padding: 2rem; max-width: 800px; margin: 2rem auto;">
+                    <h3 style="color: #00d4ff; margin-bottom: 1rem;">🔐 Time-Locked Asset Vault</h3>
+                    <p style="color: #8892b0; margin-bottom: 1.5rem; line-height: 1.6;">
+                        Lock tokens or LP tokens with customizable time-based release schedules. Build trust,
+                        prevent early dumps, and implement vesting schedules across multiple wallets.
+                    </p>
+                    
+                    <div class="info-box" style="margin-bottom: 1.5rem;">
+                        <strong>Features:</strong><br>
+                        ✅ Lock tokens or LP tokens<br>
+                        ✅ Time-based unlock schedules<br>
+                        ✅ Three vesting types (Cliff/Linear/Milestone)<br>
+                        ✅ View all locked positions<br>
+                        ✅ Unlock when time expires<br>
+                        ✅ Lock fee: 0.5% | Unlock fee: 0.3%
+                    </div>
+                    
+                    <div class="warning-box" style="margin-bottom: 1.5rem;">
+                        <strong>⚠️ Important Notes:</strong><br>
+                        • Locked tokens CANNOT be accessed early<br>
+                        • Unlock only possible after lock period<br>
+                        • Lock fee: 0.5% of locked amount<br>
+                        • Unlock fee: 0.3% of unlocked amount<br>
+                        • Total fees: ~0.8% end-to-end
+                    </div>
+                    
+                    <a href="locker.html" target="_blank" class="btn-primary" style="text-decoration: none; display: block; text-align: center;">
+                        🚀 Open Token Locker
+                    </a>
+                </div>
+                
+                <div class="info-box" style="max-width: 800px; margin: 2rem auto;">
+                    <h3 style="color: #00d4ff; margin-bottom: 1rem;">💡 How It Works</h3>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Step 1: Select Action</strong><br>
+                        • <strong>Lock:</strong> Create new time-locked position<br>
+                        • <strong>Unlock:</strong> Claim expired locks<br>
+                        • <strong>View:</strong> See all lock positions & status
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Step 2: Configure Asset</strong><br>
+                        • Select blockchain<br>
+                        • Choose Token or LP Token<br>
+                        • Enter contract address<br>
+                        • Import wallet private keys
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Step 3: Set Lock Parameters</strong><br>
+                        • Amount to lock per wallet<br>
+                        • Duration: 7/30/90/365 days or custom<br>
+                        • Vesting type:<br>
+                        &nbsp;&nbsp;→ <strong>Cliff:</strong> All unlock at once<br>
+                        &nbsp;&nbsp;→ <strong>Linear:</strong> Gradual daily unlock<br>
+                        &nbsp;&nbsp;→ <strong>Milestone:</strong> Staged releases
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Step 4: Execute Lock</strong><br>
+                        • Review lock schedule<br>
+                        • Platform fee (0.5%) collected<br>
+                        • Tokens locked in smart contract<br>
+                        • Cannot access until unlock date
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Vesting Types:</strong><br>
+                        • <strong>Cliff:</strong> 100% unlocks on specific date<br>
+                        • <strong>Linear:</strong> Unlock % each day over period<br>
+                        • <strong>Milestone:</strong> 25% every 3 months (example)
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Use Cases:</strong><br>
+                        • Lock team tokens (prevent dumps)<br>
+                        • Lock liquidity (build trust)<br>
+                        • Investor vesting schedules<br>
+                        • Advisor token releases<br>
+                        • Community treasury locks
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Fee Structure:</strong><br>
+                        Lock 1000 tokens → 0.5% fee = 995 locked<br>
+                        Unlock 995 tokens → 0.3% fee = 992.015 received<br>
+                        <strong>Total fees: ~0.8%</strong>
+                    </div>
+                </div>
+            </div>
+        </div>                </div>
+            </div>
+        </div>
+
+        <!-- Vanity Tools Tab -->
+        <div id="vanity-tools" class="tab-content">
+            <div id="vanityToolsContent">
+                <div class="feature-header">
+                    <h2>✨ Vanity Wallet Generators</h2>
+                    <p class="feature-description">Create custom wallet addresses with personalized patterns</p>
+                </div>
+                
+                <div class="vanity-tools-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin: 2rem 0;">
+                    <div class="tool-card" style="background: #121826; border: 2px solid #1f2937; border-radius: 12px; padding: 2rem;">
+                        <h3 style="color: #00d4ff; margin-bottom: 1rem;">🎯 Single Vanity Generator</h3>
+                        <p style="color: #8892b0; margin-bottom: 1.5rem; line-height: 1.6;">
+                            Generate one vanity wallet at a time with detailed progress tracking.
+                            Perfect for finding that one perfect address.
+                        </p>
+                        <div class="info-box" style="margin-bottom: 1.5rem;">
+                            <strong>Features:</strong><br>
+                            ✅ Ethereum / Solana / Sui<br>
+                            ✅ Prefix / Suffix / Contains<br>
+                            ✅ Case sensitive option<br>
+                            ✅ Real-time stats & progress<br>
+                            ✅ Seed phrase generation<br>
+                            ✅ CSV export
+                        </div>
+                        <a href="vanity-generator-simple.html" target="_blank" class="btn-primary" style="text-decoration: none; display: block; text-align: center;">
+                            🚀 Open Single Generator
+                        </a>
+                    </div>
+                    
+                    <div class="tool-card" style="background: #121826; border: 2px solid #1f2937; border-radius: 12px; padding: 2rem;">
+                        <h3 style="color: #ffaa00; margin-bottom: 1rem;">⚡ Batch Vanity Generator</h3>
+                        <p style="color: #8892b0; margin-bottom: 1.5rem; line-height: 1.6;">
+                            Generate multiple vanity wallets in one go. Find 3, 5, or 10 matching addresses at once!
+                        </p>
+                        <div class="info-box" style="margin-bottom: 1.5rem; border-color: #ffaa00;">
+                            <strong>Features:</strong><br>
+                            ✅ Random batch: 1-1000 wallets<br>
+                            ✅ Vanity batch: 1-100 wallets<br>
+                            ✅ All 3 blockchains<br>
+                            ✅ Progress per wallet found<br>
+                            ✅ Stop & resume anytime<br>
+                            ✅ Export all to one CSV
+                        </div>
+                        <a href="vanity-generator.html" target="_blank" class="btn-primary" style="text-decoration: none; display: block; text-align: center; background: linear-gradient(135deg, #ffaa00, #cc8800);">
+                            ⚡ Open Batch Generator
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="info-box">
+                    <h3 style="color: #00d4ff; margin-bottom: 1rem;">📖 Quick Guide</h3>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Character Sets:</strong><br>
+                        • Ethereum/Sui: Hex (0-9, a-f)<br>
+                        • Solana: Base58 (A-Z, a-z, 1-9, no 0OIl)
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Pattern Examples:</strong><br>
+                        • Ethereum: cafe, dead, 1234, abc<br>
+                        • Solana: Alice, Pump, Moon, Bob<br>
+                        • Sui: cafe, dead, 123
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Generation Times:</strong><br>
+                        • 3 chars: < 1 second<br>
+                        • 4 chars: 1-10 seconds<br>
+                        • 5 chars: 10s - 2 minutes<br>
+                        • 6+ chars: Minutes to hours!
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Token Clone Tab -->
+        <div id="token-clone" class="tab-content">
+            <div id="tokenCloneContent">
+                <div class="feature-header">
+                    <h2>🧬 Token Cloner</h2>
+                    <p class="feature-description">Clone and redeploy existing token contracts with custom parameters</p>
+                </div>
+                
+                <div class="tool-card" style="background: #121826; border: 2px solid #1f2937; border-radius: 12px; padding: 2rem; max-width: 800px; margin: 2rem auto;">
+                    <h3 style="color: #00d4ff; margin-bottom: 1rem;">📋 Smart Contract Cloner</h3>
+                    <p style="color: #8892b0; margin-bottom: 1.5rem; line-height: 1.6;">
+                        Clone verified token contracts from any blockchain, customize name/symbol/supply,
+                        and redeploy under your wallet. Perfect for creating similar tokens quickly.
+                    </p>
+                    
+                    <div class="info-box" style="margin-bottom: 1.5rem;">
+                        <strong>Features:</strong><br>
+                        ✅ Clone any verified token contract<br>
+                        ✅ Customize name, symbol, supply<br>
+                        ✅ Keep original contract features<br>
+                        ✅ Deploy to your wallet<br>
+                        ✅ 5 blockchains supported<br>
+                        ✅ Popular token templates
+                    </div>
+                    
+                    <div class="warning-box" style="margin-bottom: 1.5rem;">
+                        <strong>⚠️ Important Notes:</strong><br>
+                        • Requires gas for deployment (~$20-100)<br>
+                        • Test on testnet first<br>
+                        • Verify contract after deployment<br>
+                        • Respect trademarks & copyrights<br>
+                        • For learning/testing purposes
+                    </div>
+                    
+                    <a href="cloner.html" target="_blank" class="btn-primary" style="text-decoration: none; display: block; text-align: center;">
+                        🚀 Open Token Cloner
+                    </a>
+                </div>
+                
+                <div class="info-box" style="max-width: 800px; margin: 2rem auto;">
+                    <h3 style="color: #00d4ff; margin-bottom: 1rem;">💡 How It Works</h3>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Step 1: Connect Wallet</strong><br>
+                        • Connect MetaMask or Web3 wallet<br>
+                        • Select deployment blockchain
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Step 2: Source Token</strong><br>
+                        • Enter contract address to clone<br>
+                        • Or select from popular templates<br>
+                        • System fetches verified source code
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Step 3: Customize</strong><br>
+                        • Change token name<br>
+                        • Update symbol/ticker<br>
+                        • Modify total supply<br>
+                        • Adjust decimals<br>
+                        • Keep or modify features
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Step 4: Review</strong><br>
+                        • Compare original vs new<br>
+                        • Review modified source code<br>
+                        • Check all parameters
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Step 5: Deploy</strong><br>
+                        • Compile modified contract<br>
+                        • Deploy to blockchain<br>
+                        • Contract deployed to your wallet<br>
+                        • You become the owner
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Clone Methods:</strong><br>
+                        • <strong>By Address:</strong> Enter any contract address<br>
+                        • <strong>Verified Only:</strong> Filter verified contracts<br>
+                        • <strong>Templates:</strong> Pre-verified popular tokens
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Example Clones:</strong><br>
+                        Clone USDT structure → Create stablecoin<br>
+                        Clone SHIB features → Create meme token<br>
+                        Clone LINK functionality → Create oracle token
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Use Cases:</strong><br>
+                        • Create similar tokens quickly<br>
+                        • Learn from existing contracts<br>
+                        • Test token mechanics<br>
+                        • Deploy community tokens<br>
+                        • Prototype before custom dev
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fair Launch Tab -->
+        <div id="fair-launch" class="tab-content">
+            <div id="fairLaunchContent">
+                <div class="info-box">
+                    <strong>🚀 Fair Launch</strong><br>
+                    Launch tokens on popular platforms like Pump.fun, Raydium, etc. (Platform API integration needed)
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>TokenForge Pro © 2025 | Universal Multi-Chain Token Platform</p>
+            <p style="margin-top: 1rem; font-size: 0.85rem;">
+                <strong>Working Features:</strong> Wallet Connection ✅ | Wallet Generator ✅ | Vanity Generators ✅ | Multi-Sender ✅ | Multi-Buyer ✅ | Batch Collector ✅ | Token Locker ✅ | Token Cloner ✅
+            </p>
+            <p style="font-size: 0.85rem;">
+                Other features have complete UI but need smart contract deployment
+            </p>
+        </footer>
+    </div>
+
+    <!-- Modal Container -->
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <div class="success-icon">✅</div>
+            <h2 class="modal-title" id="modalTitle">Success!</h2>
+            <p class="modal-text" id="modalText"></p>
+            <div class="contract-address" id="modalAddress"></div>
+            <div class="modal-actions">
+                <button class="btn-primary" id="modalPrimaryAction">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts - Load in correct order -->
+    <script src="js/config.js"></script>
+    <script src="js/wallet.js"></script>
+    <script src="js/wallet-generator.js"></script>
+    
+    <!-- Navigation Script -->
+    <script>
+        console.log('Initializing TokenForge Pro...');
+        
+        // Tab Navigation
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabId = this.dataset.tab;
+                
+                // Hide all tabs
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                // Remove active from all nav tabs
+                document.querySelectorAll('.nav-tab').forEach(t => {
+                    t.classList.remove('active');
+                });
+                
+                // Show selected tab
+                document.getElementById(tabId).classList.add('active');
+                this.classList.add('active');
+                
+                // Initialize module if exists
+                const moduleMap = {
+                    'wallet-generator': 'WalletGenerator'
+                };
+                
+                const moduleName = moduleMap[tabId];
+                if (moduleName && window[moduleName] && typeof window[moduleName].init === 'function') {
+                    console.log('Initializing module:', moduleName);
+                    window[moduleName].init();
+                }
+            });
+        });
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing...');
+            
+            // Initialize wallet generator first (default tab)
+            if (window.WalletGenerator) {
+                console.log('Initializing WalletGenerator');
+                WalletGenerator.init();
+            } else {
+                console.error('WalletGenerator not found!');
+            }
+            
+            // Initialize wallet manager
+            if (window.walletManager) {
+                console.log('WalletManager ready');
+            } else {
+                console.error('WalletManager not found!');
+            }
+            
+            // Setup Connect Wallet button
+            const connectBtn = document.getElementById('connectWallet');
+            if (connectBtn) {
+                connectBtn.addEventListener('click', async function() {
+                    console.log('Connect Wallet clicked');
+                    
+                    if (typeof window.ethereum === 'undefined') {
+                        alert('MetaMask is not installed! Please install MetaMask to continue.');
+                        window.open('https://metamask.io/download/', '_blank');
+                        return;
+                    }
+                    
+                    try {
+                        // Request account access
+                        const accounts = await window.ethereum.request({ 
+                            method: 'eth_requestAccounts' 
+                        });
+                        
+                        if (accounts && accounts.length > 0) {
+                            const account = accounts[0];
+                            console.log('Connected account:', account);
+                            
+                            // Store in localStorage so token-creator can access it
+                            localStorage.setItem('connectedWallet', account);
+                            localStorage.setItem('walletConnected', 'true');
+                            
+                            // Update button
+                            connectBtn.textContent = account.substring(0, 6) + '...' + account.substring(38);
+                            connectBtn.style.background = '#10b981';
+                            
+                            showNotification('Wallet Connected: ' + account.substring(0, 10) + '...');
+                        }
+                    } catch (error) {
+                        console.error('Error connecting wallet:', error);
+                        if (error.code === 4001) {
+                            alert('Connection rejected. Please try again.');
+                        } else {
+                            alert('Error connecting wallet: ' + error.message);
+                        }
+                    }
+                });
+                
+                // Check if already connected
+                checkWalletConnection();
+            }
+        });
+        
+        // Check if wallet is already connected
+        async function checkWalletConnection() {
+            if (typeof window.ethereum === 'undefined') {
+                return;
+            }
+            
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts && accounts.length > 0) {
+                    const account = accounts[0];
+                    localStorage.setItem('connectedWallet', account);
+                    localStorage.setItem('walletConnected', 'true');
+                    
+                    const connectBtn = document.getElementById('connectWallet');
+                    if (connectBtn) {
+                        connectBtn.textContent = account.substring(0, 6) + '...' + account.substring(38);
+                        connectBtn.style.background = '#10b981';
+                    }
+                    console.log('Wallet already connected:', account);
+                }
+            } catch (error) {
+                console.error('Error checking wallet:', error);
+            }
+        }
+        
+        // Listen for account changes
+        if (typeof window.ethereum !== 'undefined') {
+            window.ethereum.on('accountsChanged', function (accounts) {
+                if (accounts.length > 0) {
+                    const account = accounts[0];
+                    localStorage.setItem('connectedWallet', account);
+                    localStorage.setItem('walletConnected', 'true');
+                    
+                    const connectBtn = document.getElementById('connectWallet');
+                    if (connectBtn) {
+                        connectBtn.textContent = account.substring(0, 6) + '...' + account.substring(38);
+                        connectBtn.style.background = '#10b981';
+                    }
+                    console.log('Account changed:', account);
+                } else {
+                    localStorage.removeItem('connectedWallet');
+                    localStorage.removeItem('walletConnected');
+                    
+                    const connectBtn = document.getElementById('connectWallet');
+                    if (connectBtn) {
+                        connectBtn.textContent = 'Connect Wallet';
+                        connectBtn.style.background = '';
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

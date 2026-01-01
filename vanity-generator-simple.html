@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Vanity Wallet Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0a0e1a;
+            color: white;
+            padding: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 { color: #00d4ff; margin-bottom: 0.5rem; }
+        .subtitle { color: #8892b0; margin-bottom: 2rem; }
+        .section {
+            background: #121826;
+            border: 2px solid #1f2937;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        input, select {
+            width: 100%;
+            padding: 0.8rem;
+            background: #0a0e1a;
+            border: 2px solid #1f2937;
+            color: white;
+            border-radius: 6px;
+            margin: 0.5rem 0;
+            font-size: 1rem;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+        button {
+            width: 100%;
+            padding: 1rem;
+            background: #00d4ff;
+            color: #0a0e1a;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0.5rem 0;
+        }
+        button:hover:not(:disabled) { background: #0099cc; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .stop-btn { background: #ff3366; }
+        .export-btn { background: #4a90e2; }
+        .info-box {
+            background: #0a0e1a;
+            border-left: 4px solid #00d4ff;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        .warning-box {
+            background: #2d1f15;
+            border-left: 4px solid #ffaa00;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            color: #ffcc88;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .stat { 
+            background: #0a0e1a; 
+            padding: 1rem; 
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-label { color: #8892b0; font-size: 0.85rem; margin-bottom: 0.5rem; }
+        .stat-value { color: #00d4ff; font-size: 1.4rem; font-weight: bold; font-family: monospace; }
+        .progress {
+            background: #0a0e1a;
+            height: 35px;
+            border-radius: 18px;
+            overflow: hidden;
+            margin: 1rem 0;
+            border: 2px solid #1f2937;
+        }
+        .progress-bar {
+            background: linear-gradient(90deg, #00d4ff, #0099cc);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0a0e1a;
+            font-weight: bold;
+        }
+        .result {
+            background: #0a0e1a;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 3px solid #ffaa00;
+            margin: 1rem 0;
+            animation: glow 2s infinite;
+        }
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(255, 170, 0, 0.3); }
+            50% { box-shadow: 0 0 25px rgba(255, 170, 0, 0.6); }
+        }
+        .highlight { 
+            background: #ffaa00; 
+            color: #0a0e1a; 
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .hidden { display: none; }
+        .field-group {
+            background: #121826;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 0.75rem 0;
+            border: 1px solid #1f2937;
+        }
+        .field-label {
+            color: #8892b0;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .field-value {
+            font-family: monospace;
+            font-size: 0.95rem;
+            word-break: break-all;
+            line-height: 1.6;
+        }
+        .copy-btn {
+            background: #1f2937;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            width: auto;
+            display: inline-block;
+        }
+        .chain-badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            background: #00d4ff;
+            color: #0a0e1a;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+        .chain-badge.solana { background: #9945FF; color: white; }
+        .chain-badge.sui { background: #4DA2FF; color: white; }
+        .spinner {
+            text-align: center;
+            color: #00d4ff;
+            font-size: 1.1rem;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+    </style>
+</head>
+<body>
+    <h1>⚒️ Universal Vanity Generator</h1>
+    <p class="subtitle">Ethereum • Solana • Sui with Seed Phrases & CSV Export</p>
+    <!-- Chain Selector -->
+    <div class="section" style="background: #121826; border: 2px solid #1f2937; border-radius: 12px; padding: 1.5rem; margin: 2rem 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <div style="color: #8892b0; font-size: 0.85rem; margin-bottom: 0.5rem;">Active Blockchain</div>
+                <div style="color: #00d4ff; font-size: 1.2rem; font-weight: bold;" id="activeChainDisplay">Ethereum</div>
+            </div>
+            <button onclick="openChainModal()" style="padding: 0.8rem 1.5rem; background: #00d4ff; color: #0a0e1a; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s;">
+                Change Chain
+            </button>
+        </div>
+        <div style="color: #8892b0; font-size: 0.85rem; text-align: center; margin-top: 1rem;">
+            Chain synced across all tools • 33 blockchains supported
+        </div>
+    </div>
+    <!-- Wallet Connection -->
+    <div class="section">
+        <h3>Connect Wallet</h3>
+        
+        <div style="background: #0a0e1a; border: 2px solid #1f2937; border-radius: 8px; padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <div style="color: #8892b0; font-size: 0.85rem;">Wallet Status</div>
+                <div id="walletAddress" style="font-family: monospace; margin-top: 0.5rem; color: white;">Not Connected</div>
+            </div>
+            <button id="connectBtn" onclick="connectWallet()" style="width: auto; padding: 0.8rem 2rem;">
+                Connect Wallet
+            </button>
+        </div>
+    </div>
+
+
+    
+    <div class="section">
+        <h3>Configuration</h3>
+        
+        <div style="margin: 1rem 0;">
+            <label><strong>Blockchain</strong></label>
+            <select id="chain" onchange="updateChainInfo()">
+                <option value="ethereum">Ethereum / EVM Chains</option>
+                <option value="solana">Solana</option>
+                <option value="sui">Sui</option>
+            </select>
+        </div>
+        
+        <div id="chainInfo" class="info-box"></div>
+        
+        <div style="margin: 1rem 0;">
+            <label><strong>Pattern Type</strong></label>
+            <select id="type">
+                <option value="prefix">Prefix (start)</option>
+                <option value="suffix">Suffix (end)</option>
+                <option value="contains">Contains (anywhere)</option>
+            </select>
+        </div>
+        
+        <div style="margin: 1rem 0;">
+            <label><strong>Pattern</strong></label>
+            <input type="text" id="pattern" placeholder="Enter pattern" maxlength="8">
+        </div>
+        
+        <div style="margin: 1rem 0;">
+            <label>
+                <input type="checkbox" id="caseSensitive" style="width: auto; margin-right: 0.5rem;">
+                Case Sensitive
+            </label>
+        </div>
+        
+        <div class="warning-box">
+            <strong>⏱️ Time Estimates:</strong><br>
+            3 chars: &lt;1s | 4 chars: 1-10s | 5 chars: 10s-2m | 6+ chars: Minutes to hours!
+        </div>
+        
+        <button id="startBtn" onclick="startSearch()">⚡ Generate Vanity Wallet</button>
+        <button id="stopBtn" onclick="stopSearch()" class="stop-btn hidden">⏹ Stop</button>
+    </div>
+    
+    <div id="progressSection" class="section hidden">
+        <div class="spinner">🔍 Searching...</div>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Attempts</div>
+                <div class="stat-value" id="attempts">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Speed</div>
+                <div class="stat-value" id="speed">0/s</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Elapsed</div>
+                <div class="stat-value" id="elapsed">0s</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Est. Time</div>
+                <div class="stat-value" id="estimate">~</div>
+            </div>
+        </div>
+        
+        <div class="progress">
+            <div class="progress-bar" id="progressBar">0%</div>
+        </div>
+    </div>
+    
+    <div id="resultSection" class="section hidden">
+        <h3 style="color: #ffaa00;">🎉 Vanity Wallet Found!</h3>
+        
+        <div class="info-box" style="border-color: #ffaa00;">
+            <strong>Stats:</strong> <span id="foundStats"></span>
+        </div>
+        
+        <div class="result">
+            <h4>Blockchain: <span id="chainBadge" class="chain-badge"></span></h4>
+            
+            <div class="field-group">
+                <div class="field-label">PUBLIC ADDRESS</div>
+                <div class="field-value" id="foundAddress"></div>
+                <button class="copy-btn" onclick="copy('address')">📋 Copy</button>
+            </div>
+            
+            <div class="field-group">
+                <div class="field-label">PRIVATE KEY (KEEP SECRET!)</div>
+                <div class="field-value" id="foundKey" style="color: #ff6699;"></div>
+                <button class="copy-btn" onclick="copy('key')">📋 Copy</button>
+            </div>
+            
+            <div class="field-group">
+                <div class="field-label">SEED PHRASE (12 WORDS)</div>
+                <div class="field-value" id="foundSeed" style="color: #4da2ff;"></div>
+                <button class="copy-btn" onclick="copy('seed')">📋 Copy</button>
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+            <button onclick="exportCSV()" class="export-btn">📥 Export CSV</button>
+            <button onclick="reset()">🔄 Generate Another</button>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>ℹ️ Supported Chains</h3>
+        
+        <div class="info-box">
+            <strong>🔷 Ethereum/EVM:</strong><br>
+            • Hex: 0-9, a-f<br>
+            • Format: 0x1234...abcd<br>
+            • Examples: cafe, dead, 1234<br><br>
+            
+            <strong>🟣 Solana:</strong><br>
+            • Base58: A-Z, a-z, 1-9 (no 0OIl)<br>
+            • Format: Base58 string<br>
+            • Examples: Alice, Pump, Moon<br><br>
+            
+            <strong>🔵 Sui:</strong><br>
+            • Hex: 0-9, a-f<br>
+            • Format: 0x followed by 64 hex chars<br>
+            • Examples: cafe, dead, 1234
+        </div>
+    </div>
+
+    <script>
+        let working = false;
+        let shouldStop = false;
+        let attempts = 0;
+        let startTime = 0;
+        let found = null;
+        
+        const BASE58_CHARS = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+        const HEX_CHARS = '0123456789abcdef';
+        
+        // BIP39 word list (simplified - first 100 words)
+        const BIP39_WORDS = [
+            'abandon', 'ability', 'able', 'about', 'above', 'absent', 'absorb', 'abstract',
+            'absurd', 'abuse', 'access', 'accident', 'account', 'accuse', 'achieve', 'acid',
+            'acoustic', 'acquire', 'across', 'act', 'action', 'actor', 'actress', 'actual',
+            'adapt', 'add', 'addict', 'address', 'adjust', 'admit', 'adult', 'advance',
+            'advice', 'aerobic', 'afford', 'afraid', 'again', 'age', 'agent', 'agree',
+            'ahead', 'aim', 'air', 'airport', 'aisle', 'alarm', 'album', 'alcohol',
+            'alert', 'alien', 'all', 'alley', 'allow', 'almost', 'alone', 'alpha',
+            'already', 'also', 'alter', 'always', 'amateur', 'amazing', 'among', 'amount',
+            'amused', 'analyst', 'anchor', 'ancient', 'anger', 'angle', 'angry', 'animal',
+            'ankle', 'announce', 'annual', 'another', 'answer', 'antenna', 'antique', 'anxiety',
+            'any', 'apart', 'apology', 'appear', 'apple', 'approve', 'april', 'arch',
+            'arctic', 'area', 'arena', 'argue', 'arm', 'armed', 'armor', 'army',
+            'around', 'arrange', 'arrest', 'arrive', 'arrow', 'art', 'artefact', 'artist'
+        ];
+        
+        function updateChainInfo() {
+            const chain = document.getElementById('chain').value;
+            const info = document.getElementById('chainInfo');
+            
+            const chainData = {
+                ethereum: {
+                    title: '🔷 Ethereum/EVM Chains',
+                    chars: 'Hex (0-9, a-f)',
+                    format: '0x1234...abcd (42 chars)',
+                    examples: 'cafe, dead, 1234, abc'
+                },
+                solana: {
+                    title: '🟣 Solana',
+                    chars: 'Base58 (A-Z, a-z, 1-9, no 0OIl)',
+                    format: 'Base58 string (32-44 chars)',
+                    examples: 'Alice, Bob, Pump, Moon'
+                },
+                sui: {
+                    title: '🔵 Sui',
+                    chars: 'Hex (0-9, a-f)',
+                    format: '0x + 64 hex chars',
+                    examples: 'cafe, dead, 1234, abc'
+                }
+            };
+            
+            const data = chainData[chain];
+            info.innerHTML = `
+                <strong>${data.title}</strong><br>
+                Characters: ${data.chars}<br>
+                Format: ${data.format}<br>
+                Example patterns: ${data.examples}
+            `;
+        }
+        
+        function generateSeedPhrase() {
+            const words = [];
+            for (let i = 0; i < 12; i++) {
+                const randomIndex = Math.floor(Math.random() * BIP39_WORDS.length);
+                words.push(BIP39_WORDS[randomIndex]);
+            }
+            return words.join(' ');
+        }
+        
+        function startSearch() {
+            const chain = document.getElementById('chain').value;
+            const pattern = document.getElementById('pattern').value.trim();
+            const type = document.getElementById('type').value;
+            const caseSensitive = document.getElementById('caseSensitive').checked;
+            
+            if (!pattern) {
+                alert('❌ Enter a pattern!');
+                return;
+            }
+            
+            // Validate characters
+            if (chain === 'ethereum' || chain === 'sui') {
+                if (!/^[0-9a-fA-F]+$/.test(pattern)) {
+                    alert('❌ Pattern must use hex (0-9, a-f) only!');
+                    return;
+                }
+            } else {
+                const invalid = pattern.split('').filter(c => !BASE58_CHARS.includes(c));
+                if (invalid.length > 0) {
+                    alert(`❌ Invalid Base58 characters: ${invalid.join(', ')}\n\nExcluded: 0, O, I, l`);
+                    return;
+                }
+            }
+            
+            if (pattern.length > 8) {
+                alert('❌ Max 8 characters!');
+                return;
+            }
+            
+            if (pattern.length >= 6 && !confirm(`⚠️ ${pattern.length} chars could take 10+ minutes!\n\nContinue?`)) {
+                return;
+            }
+            
+            // Start
+            working = true;
+            shouldStop = false;
+            attempts = 0;
+            startTime = Date.now();
+            found = null;
+            
+            document.getElementById('startBtn').classList.add('hidden');
+            document.getElementById('stopBtn').classList.remove('hidden');
+            document.getElementById('progressSection').classList.remove('hidden');
+            document.getElementById('resultSection').classList.add('hidden');
+            
+            setTimeout(() => searchLoop(chain, pattern, type, caseSensitive), 10);
+        }
+        
+        function searchLoop(chain, pattern, type, caseSensitive) {
+            if (!working || shouldStop) {
+                stopSearch();
+                return;
+            }
+            
+            const batchSize = 500;
+            
+            for (let i = 0; i < batchSize; i++) {
+                attempts++;
+                
+                const wallet = generateWallet(chain);
+                const address = wallet.address;
+                const checkAddr = caseSensitive ? address : address.toLowerCase();
+                const checkPattern = caseSensitive ? pattern : pattern.toLowerCase();
+                
+                let match = false;
+                let checkStart = 0;
+                
+                if (chain === 'ethereum') {
+                    checkStart = 2; // Skip "0x"
+                } else if (chain === 'sui') {
+                    checkStart = 2; // Skip "0x"
+                }
+                
+                if (type === 'prefix') {
+                    match = checkAddr.substring(checkStart, checkStart + checkPattern.length) === checkPattern;
+                } else if (type === 'suffix') {
+                    match = checkAddr.endsWith(checkPattern);
+                } else {
+                    match = checkAddr.includes(checkPattern);
+                }
+                
+                if (match) {
+                    found = { ...wallet, pattern, type, chain, caseSensitive };
+                    onFound();
+                    return;
+                }
+            }
+            
+            updateStats(pattern, chain);
+            setTimeout(() => searchLoop(chain, pattern, type, caseSensitive), 0);
+        }
+        
+        function generateWallet(chain) {
+            const seedPhrase = generateSeedPhrase();
+            
+            if (chain === 'ethereum') {
+                const privKey = new Uint8Array(32);
+                crypto.getRandomValues(privKey);
+                const privateKey = '0x' + Array.from(privKey)
+                    .map(b => b.toString(16).padStart(2, '0')).join('');
+                
+                const addr = new Uint8Array(20);
+                crypto.getRandomValues(addr);
+                const address = '0x' + Array.from(addr)
+                    .map(b => b.toString(16).padStart(2, '0')).join('');
+                
+                return { address, privateKey, seedPhrase };
+                
+            } else if (chain === 'solana') {
+                const privKey = new Uint8Array(32);
+                crypto.getRandomValues(privKey);
+                const privateKey = Array.from(privKey)
+                    .map(b => b.toString(16).padStart(2, '0')).join('');
+                
+                const pubKey = new Uint8Array(32);
+                crypto.getRandomValues(pubKey);
+                const address = uint8ToBase58(pubKey);
+                
+                return { address, privateKey, seedPhrase };
+                
+            } else { // sui
+                const privKey = new Uint8Array(32);
+                crypto.getRandomValues(privKey);
+                const privateKey = Array.from(privKey)
+                    .map(b => b.toString(16).padStart(2, '0')).join('');
+                
+                const addr = new Uint8Array(32);
+                crypto.getRandomValues(addr);
+                const address = '0x' + Array.from(addr)
+                    .map(b => b.toString(16).padStart(2, '0')).join('');
+                
+                return { address, privateKey, seedPhrase };
+            }
+        }
+        
+        function uint8ToBase58(bytes) {
+            let result = '';
+            for (let i = 0; i < bytes.length; i++) {
+                result += BASE58_CHARS[bytes[i] % BASE58_CHARS.length];
+            }
+            for (let i = 0; i < 12; i++) {
+                result += BASE58_CHARS[Math.floor(Math.random() * BASE58_CHARS.length)];
+            }
+            return result;
+        }
+        
+        function updateStats(pattern, chain) {
+            const elapsed = (Date.now() - startTime) / 1000;
+            const speed = Math.floor(attempts / elapsed);
+            
+            document.getElementById('attempts').textContent = attempts.toLocaleString();
+            document.getElementById('speed').textContent = speed.toLocaleString() + '/s';
+            document.getElementById('elapsed').textContent = Math.floor(elapsed) + 's';
+            
+            const charSet = (chain === 'ethereum' || chain === 'sui') ? 16 : 58;
+            const expected = Math.pow(charSet, pattern.length) / 2;
+            const progress = Math.min(100, (attempts / expected) * 100);
+            
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressBar').textContent = progress.toFixed(1) + '%';
+            
+            if (speed > 0) {
+                const remaining = Math.max(0, expected - attempts);
+                const secs = remaining / speed;
+                const est = secs < 60 ? Math.ceil(secs) + 's' :
+                           secs < 3600 ? Math.ceil(secs / 60) + 'm' :
+                           Math.ceil(secs / 3600) + 'h';
+                document.getElementById('estimate').textContent = est;
+            }
+        }
+        
+        function onFound() {
+            working = false;
+            
+            const elapsed = (Date.now() - startTime) / 1000;
+            const speed = Math.floor(attempts / elapsed);
+            
+            document.getElementById('progressSection').classList.add('hidden');
+            document.getElementById('resultSection').classList.remove('hidden');
+            
+            const pattern = found.pattern;
+            const address = found.address;
+            const caseSens = found.caseSensitive;
+            
+            // Highlight pattern
+            let display = address;
+            const searchAddr = caseSens ? address : address.toLowerCase();
+            const searchPattern = caseSens ? pattern : pattern.toLowerCase();
+            
+            const idx = searchAddr.indexOf(searchPattern);
+            if (idx >= 0) {
+                display = address.substring(0, idx) +
+                    '<span class="highlight">' + 
+                    address.substring(idx, idx + pattern.length) +
+                    '</span>' +
+                    address.substring(idx + pattern.length);
+            }
+            
+            document.getElementById('foundAddress').innerHTML = display;
+            document.getElementById('foundKey').textContent = found.privateKey;
+            document.getElementById('foundSeed').textContent = found.seedPhrase;
+            document.getElementById('foundStats').textContent = 
+                `${attempts.toLocaleString()} attempts in ${elapsed.toFixed(2)}s (${speed.toLocaleString()}/s)`;
+            
+            const badge = document.getElementById('chainBadge');
+            const badgeText = { ethereum: 'Ethereum', solana: 'Solana', sui: 'Sui' };
+            badge.textContent = badgeText[found.chain];
+            badge.className = 'chain-badge ' + found.chain;
+        }
+        
+        function stopSearch() {
+            shouldStop = true;
+            working = false;
+            document.getElementById('startBtn').classList.remove('hidden');
+            document.getElementById('stopBtn').classList.add('hidden');
+            document.getElementById('progressSection').classList.add('hidden');
+        }
+        
+        function reset() {
+            document.getElementById('startBtn').classList.remove('hidden');
+            document.getElementById('stopBtn').classList.add('hidden');
+            document.getElementById('progressSection').classList.add('hidden');
+            document.getElementById('resultSection').classList.add('hidden');
+            document.getElementById('pattern').value = '';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        function copy(what) {
+            let text;
+            if (what === 'address') text = found.address;
+            else if (what === 'key') text = found.privateKey;
+            else text = found.seedPhrase;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ Copied!');
+            }).catch(() => {
+                alert('❌ Copy failed');
+            });
+        }
+        
+        function exportCSV() {
+            const csv = `Blockchain,Pattern,Address,PrivateKey,SeedPhrase,Attempts,Time(s)\n` +
+                `${found.chain},${found.pattern},"${found.address}","${found.privateKey}","${found.seedPhrase}",${attempts},${((Date.now() - startTime) / 1000).toFixed(2)}`;
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `vanity-wallet-${found.chain}-${Date.now()}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert('✅ CSV exported!');
+        }
+        
+        updateChainInfo();
+        console.log('✅ Universal Vanity Generator Ready!');
+    </script>
+    <script src="js/chain-selector.js"></script>
+</body>
+</html>

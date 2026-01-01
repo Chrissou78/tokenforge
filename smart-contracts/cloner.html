@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Cloner</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #0a0e1a;
+            color: white;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 { color: #00d4ff; margin-bottom: 0.5rem; }
+        .subtitle { color: #8892b0; margin-bottom: 2rem; }
+        
+        .section {
+            background: #121826;
+            border: 2px solid #1f2937;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 0.8rem;
+            background: #0a0e1a;
+            border: 2px solid #1f2937;
+            color: white;
+            border-radius: 6px;
+            margin: 0.5rem 0;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+        
+        textarea {
+            min-height: 200px;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+        
+        button {
+            width: 100%;
+            padding: 1rem;
+            background: #00d4ff;
+            color: #0a0e1a;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0.5rem 0;
+            transition: all 0.3s;
+        }
+        
+        button:hover:not(:disabled) { 
+            background: #0099cc;
+            transform: translateY(-2px);
+        }
+        
+        button:disabled { 
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary { background: #4a90e2; }
+        .btn-secondary:hover:not(:disabled) { background: #357abd; }
+        
+        .info-box {
+            background: #0a0e1a;
+            border-left: 4px solid #00d4ff;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        
+        .warning-box {
+            background: #2d1f15;
+            border-left: 4px solid #ffaa00;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            color: #ffcc88;
+        }
+        
+        .success-box {
+            background: #1a2d1f;
+            border-left: 4px solid #00d4ff;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            color: #aae3ff;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .stat {
+            background: #0a0e1a;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #1f2937;
+        }
+        
+        .stat-label {
+            color: #8892b0;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-value {
+            color: #00d4ff;
+            font-size: 1.5rem;
+            font-weight: bold;
+            font-family: monospace;
+        }
+        
+        .code-block {
+            background: #0a0e1a;
+            border: 2px solid #1f2937;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            font-family: monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .comparison-table {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .comparison-card {
+            background: #0a0e1a;
+            border: 2px solid #1f2937;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        
+        .comparison-card h4 {
+            color: #00d4ff;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #1f2937;
+        }
+        
+        .feature-row:last-child {
+            border-bottom: none;
+        }
+        
+        .wallet-status {
+            background: #0a0e1a;
+            border: 2px solid #1f2937;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .wallet-status.connected {
+            border-color: #00d4ff;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin: 2rem 0;
+            gap: 1rem;
+        }
+        
+        .step {
+            flex: 1;
+            text-align: center;
+            padding: 1rem;
+            background: #0a0e1a;
+            border: 2px solid #1f2937;
+            border-radius: 8px;
+        }
+        
+        .step.active {
+            border-color: #00d4ff;
+            background: rgba(0, 255, 136, 0.1);
+        }
+        
+        .step.completed {
+            border-color: #00d4ff;
+            background: rgba(0, 255, 136, 0.05);
+        }
+        
+        .hidden { display: none; }
+        
+        label {
+            display: block;
+            color: #8892b0;
+            margin: 1rem 0 0.5rem 0;
+            font-weight: bold;
+        }
+        
+        .template-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .template-card {
+            background: #0a0e1a;
+            border: 2px solid #1f2937;
+            border-radius: 8px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .template-card:hover {
+            border-color: #00d4ff;
+            transform: translateY(-2px);
+        }
+        
+        .template-card.active {
+            border-color: #00d4ff;
+            background: rgba(0, 255, 136, 0.1);
+        }
+        
+        .template-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧬 Token Cloner</h1>
+    <p class="subtitle">Clone and redeploy existing token contracts with custom parameters</p>
+    <!-- Chain Selector -->
+    <div class="section" style="background: #121826; border: 2px solid #1f2937; border-radius: 12px; padding: 1.5rem; margin: 2rem 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <div style="color: #8892b0; font-size: 0.85rem; margin-bottom: 0.5rem;">Active Blockchain</div>
+                <div style="color: #00d4ff; font-size: 1.2rem; font-weight: bold;" id="activeChainDisplay">Ethereum</div>
+            </div>
+            <button onclick="openChainModal()" style="padding: 0.8rem 1.5rem; background: #00d4ff; color: #0a0e1a; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s;">
+                Change Chain
+            </button>
+        </div>
+        <div style="color: #8892b0; font-size: 0.85rem; text-align: center; margin-top: 1rem;">
+            Chain synced across all tools • 33 blockchains supported
+        </div>
+    </div>
+
+    
+    <!-- Wallet Connection -->
+    <div class="section">
+        <h3>Connect Wallet</h3>
+        
+        <div class="wallet-status" id="walletStatus">
+            <div>
+                <div style="color: #8892b0; font-size: 0.85rem;">Wallet Status</div>
+                <div id="walletAddress" style="font-family: monospace; margin-top: 0.5rem;">Not Connected</div>
+            </div>
+            <button id="connectBtn" onclick="connectWallet()" style="width: auto; padding: 0.8rem 2rem;">
+                Connect Wallet
+            </button>
+        </div>
+    
+    <!-- Clone Method -->
+    <div class="section" id="cloneMethodSection" class="hidden">
+        <h3>Select Cloning Method</h3>
+        
+        <div class="template-selector">
+            <div class="template-card active" onclick="selectMethod('address')">
+                <div class="template-icon">📍</div>
+                <div><strong>Clone by Address</strong></div>
+                <div style="color: #8892b0; margin-top: 0.5rem; font-size: 0.85rem;">
+                    Enter token contract address
+                </div>
+            </div>
+            
+            <div class="template-card" onclick="selectMethod('verified')">
+                <div class="template-icon">✅</div>
+                <div><strong>Clone Verified</strong></div>
+                <div style="color: #8892b0; margin-top: 0.5rem; font-size: 0.85rem;">
+                    From verified contracts
+                </div>
+            </div>
+            
+            <div class="template-card" onclick="selectMethod('popular')">
+                <div class="template-icon">🔥</div>
+                <div><strong>Popular Templates</strong></div>
+                <div style="color: #8892b0; margin-top: 0.5rem; font-size: 0.85rem;">
+                    Pre-verified tokens
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Step Indicator -->
+    <div class="step-indicator hidden" id="stepIndicator">
+        <div class="step active" id="step1">
+            <div style="font-size: 1.5rem;">1️⃣</div>
+            <div style="margin-top: 0.5rem;">Source Token</div>
+        </div>
+        <div class="step" id="step2">
+            <div style="font-size: 1.5rem;">2️⃣</div>
+            <div style="margin-top: 0.5rem;">Fetch Contract</div>
+        </div>
+        <div class="step" id="step3">
+            <div style="font-size: 1.5rem;">3️⃣</div>
+            <div style="margin-top: 0.5rem;">Customize</div>
+        </div>
+        <div class="step" id="step4">
+            <div style="font-size: 1.5rem;">4️⃣</div>
+            <div style="margin-top: 0.5rem;">Review</div>
+        </div>
+        <div class="step" id="step5">
+            <div style="font-size: 1.5rem;">5️⃣</div>
+            <div style="margin-top: 0.5rem;">Deploy</div>
+        </div>
+    </div>
+    
+    <!-- Step 1: Source Token -->
+    <div class="section hidden" id="sourceSection">
+        <h3>1️⃣ Enter Source Token Address</h3>
+        
+        <label>Token Contract Address</label>
+        <input type="text" id="sourceAddress" placeholder="0x... contract address to clone">
+        
+        <div class="info-box">
+            <strong>Examples:</strong><br>
+            • USDT: 0xdac17f958d2ee523a2206206994597c13d831ec7<br>
+            • SHIB: 0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce<br>
+            • PEPE: 0x6982508145454Ce325dDbE47a25d4ec3d2311933
+        </div>
+        
+        <button onclick="fetchContract()">🔍 Fetch Contract</button>
+    </div>
+    
+    <!-- Step 2: Contract Fetched -->
+    <div class="section hidden" id="contractSection">
+        <h3>2️⃣ Contract Fetched Successfully</h3>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Token Name</div>
+                <div class="stat-value" id="origName" style="font-size: 1.2rem;">-</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Symbol</div>
+                <div class="stat-value" id="origSymbol">-</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Decimals</div>
+                <div class="stat-value" id="origDecimals">-</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Total Supply</div>
+                <div class="stat-value" id="origSupply" style="font-size: 1rem;">-</div>
+            </div>
+        </div>
+        
+        <div class="info-box">
+            <strong>Contract Features Detected:</strong>
+            <div id="contractFeatures" style="margin-top: 0.5rem;"></div>
+        </div>
+        
+        <label>Contract Source Code</label>
+        <div class="code-block" id="sourceCode">Loading contract code...</div>
+        
+        <button onclick="nextStep(3)">Continue to Customization →</button>
+    </div>
+    
+    <!-- Step 3: Customization -->
+    <div class="section hidden" id="customSection">
+        <h3>3️⃣ Customize Your Token</h3>
+        
+        <div class="grid-2">
+            <div>
+                <label>New Token Name</label>
+                <input type="text" id="newName" placeholder="My New Token">
+                <small style="color: #8892b0; display: block; margin-top: 0.3rem;">
+                    Full name displayed in wallets
+                </small>
+            </div>
+            
+            <div>
+                <label>New Token Symbol</label>
+                <input type="text" id="newSymbol" placeholder="MNT" style="text-transform: uppercase;">
+                <small style="color: #8892b0; display: block; margin-top: 0.3rem;">
+                    Ticker symbol (3-5 chars recommended)
+                </small>
+            </div>
+        </div>
+        
+        <label>Total Supply</label>
+        <input type="number" id="newSupply" placeholder="1000000000">
+        <small style="color: #8892b0; display: block; margin-top: 0.3rem;">
+            Initial token supply (without decimals)
+        </small>
+        
+        <label>Decimals</label>
+        <select id="newDecimals">
+            <option value="18">18 (Standard - like ETH)</option>
+            <option value="9">9 (Common for meme tokens)</option>
+            <option value="6">6 (Like USDC)</option>
+            <option value="8">8 (Like Bitcoin)</option>
+        </select>
+        
+        <div class="warning-box">
+            <strong>⚠️ Advanced Options:</strong><br>
+            Keep original contract features or customize specific functions
+        </div>
+        
+        <label>
+            <input type="checkbox" id="keepFeatures" checked style="width: auto; margin-right: 0.5rem;">
+            Keep original contract features (tax, limits, etc.)
+        </label>
+        
+        <button onclick="nextStep(4)">Review Changes →</button>
+    </div>
+    
+    <!-- Step 4: Review -->
+    <div class="section hidden" id="reviewSection">
+        <h3>4️⃣ Review Changes</h3>
+        
+        <div class="comparison-table">
+            <div class="comparison-card">
+                <h4>📋 Original Token</h4>
+                <div class="feature-row">
+                    <span style="color: #8892b0;">Name:</span>
+                    <span id="reviewOrigName">-</span>
+                </div>
+                <div class="feature-row">
+                    <span style="color: #8892b0;">Symbol:</span>
+                    <span id="reviewOrigSymbol">-</span>
+                </div>
+                <div class="feature-row">
+                    <span style="color: #8892b0;">Supply:</span>
+                    <span id="reviewOrigSupply">-</span>
+                </div>
+                <div class="feature-row">
+                    <span style="color: #8892b0;">Decimals:</span>
+                    <span id="reviewOrigDecimals">-</span>
+                </div>
+            </div>
+            
+            <div class="comparison-card">
+                <h4>✨ Your New Token</h4>
+                <div class="feature-row">
+                    <span style="color: #8892b0;">Name:</span>
+                    <span style="color: #00d4ff;" id="reviewNewName">-</span>
+                </div>
+                <div class="feature-row">
+                    <span style="color: #8892b0;">Symbol:</span>
+                    <span style="color: #00d4ff;" id="reviewNewSymbol">-</span>
+                </div>
+                <div class="feature-row">
+                    <span style="color: #8892b0;">Supply:</span>
+                    <span style="color: #00d4ff;" id="reviewNewSupply">-</span>
+                </div>
+                <div class="feature-row">
+                    <span style="color: #8892b0;">Decimals:</span>
+                    <span style="color: #00d4ff;" id="reviewNewDecimals">-</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-box">
+            <strong>📝 Modified Contract:</strong>
+            <div style="margin-top: 0.5rem; color: #8892b0;">
+                Contract code has been updated with your parameters
+            </div>
+        </div>
+        
+        <label>Final Contract Code</label>
+        <div class="code-block" id="modifiedCode">// Modified contract will appear here...</div>
+        
+        <div class="warning-box">
+            <strong>⚠️ Before Deploying:</strong><br>
+            • Review all parameters carefully<br>
+            • Ensure you have gas for deployment<br>
+            • Deployment costs vary by chain (~$20-100)<br>
+            • Contract will be deployed to your wallet
+        </div>
+        
+        <div class="grid-2">
+            <button onclick="prevStep(3)" class="btn-secondary">← Back to Edit</button>
+            <button onclick="nextStep(5)">Deploy Contract 🚀</button>
+        </div>
+    </div>
+    
+    <!-- Step 5: Deploy -->
+    <div class="section hidden" id="deploySection">
+        <h3>5️⃣ Deploy Your Token</h3>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Network</div>
+                <div class="stat-value" id="deployNetwork" style="font-size: 1.2rem;">-</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Est. Gas</div>
+                <div class="stat-value" id="estimatedGas">~</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Status</div>
+                <div class="stat-value" id="deployStatus" style="font-size: 1rem;">Ready</div>
+            </div>
+        </div>
+        
+        <div id="deployProgress" class="hidden">
+            <div style="background: #0a0e1a; padding: 1.5rem; border-radius: 8px; margin: 1rem 0;">
+                <div style="text-align: center; color: #00d4ff; margin-bottom: 1rem;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">⏳</div>
+                    <div>Deploying Contract...</div>
+                </div>
+                <div style="color: #8892b0; font-size: 0.9rem; text-align: center;" id="deployStep">
+                    Compiling contract...
+                </div>
+            </div>
+        </div>
+        
+        <button id="deployBtn" onclick="deployContract()">🚀 Deploy Token Contract</button>
+    </div>
+    
+    <!-- Success -->
+    <div class="section hidden" id="successSection">
+        <h3>🎉 Token Deployed Successfully!</h3>
+        
+        <div class="success-box">
+            <strong>Contract Address:</strong><br>
+            <span id="newContractAddress" style="font-family: monospace; word-break: break-all; font-size: 1.1rem;">-</span>
+        </div>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Token Name</div>
+                <div class="stat-value" id="successName" style="font-size: 1rem;">-</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Symbol</div>
+                <div class="stat-value" id="successSymbol">-</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Supply</div>
+                <div class="stat-value" id="successSupply" style="font-size: 1rem;">-</div>
+            </div>
+        </div>
+        
+        <div class="info-box">
+            <strong>✅ Next Steps:</strong><br>
+            • Add liquidity on DEX<br>
+            • Verify contract on Etherscan<br>
+            • Update token info on CoinGecko/CMC<br>
+            • Distribute to holders
+        </div>
+        
+        <div class="grid-2">
+            <button onclick="viewOnExplorer()" class="btn-secondary">🔍 View on Explorer</button>
+            <button onclick="cloneAnother()">🧬 Clone Another Token</button>
+        </div>
+    </div>
+    
+    <!-- Info -->
+    <div class="section">
+        <h3>📋 How Token Cloning Works</h3>
+        
+        <div class="info-box">
+            <strong>1. Fetch Source Contract</strong><br>
+            Retrieves verified contract code from blockchain explorer
+        </div>
+        
+        <div class="info-box">
+            <strong>2. Parse & Analyze</strong><br>
+            Identifies token parameters and contract features
+        </div>
+        
+        <div class="info-box">
+            <strong>3. Customize Parameters</strong><br>
+            Replace name, symbol, supply while keeping functionality
+        </div>
+        
+        <div class="info-box">
+            <strong>4. Compile & Deploy</strong><br>
+            Deploy modified contract to your wallet address
+        </div>
+        
+        <div class="warning-box">
+            <strong>⚠️ Legal Notice:</strong><br>
+            • Cloning is for learning/testing purposes<br>
+            • Do not clone copyrighted tokens<br>
+            • Respect original project trademarks<br>
+            • Deploy responsibly on mainnet
+        </div>
+        
+        <div class="info-box">
+            <strong>💡 Best Practices:</strong><br>
+            • Test on testnet first<br>
+            • Verify contract after deployment<br>
+            • Audit code before mainnet<br>
+            • Add liquidity carefully
+        </div>
+    </div>
+
+    <script>
+         CODE ===
+        let connected = false;
+        let currentAccount = null;
+        let currentChain = 'ethereum';
+        let currentStep = 1;
+        let sourceToken = {};
+        let cloneMethod = 'address';
+        
+        async function connectWallet() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    const accounts = await window.ethereum.request({ 
+                        method: 'eth_requestAccounts' 
+                    });
+                    
+                    currentAccount = accounts[0];
+                    connected = true;
+                    
+                    document.getElementById('walletAddress').textContent = 
+                        currentAccount.substring(0, 6) + '...' + currentAccount.substring(38);
+                    
+                    document.getElementById('walletStatus').classList.add('connected');
+                    document.getElementById('connectBtn').textContent = 'Connected ✓';
+                    document.getElementById('connectBtn').disabled = true;
+                    
+                    document.getElementById('cloneMethodSection').classList.remove('hidden');
+                    document.getElementById('stepIndicator').classList.remove('hidden');
+                    document.getElementById('sourceSection').classList.remove('hidden');
+                    
+                    alert('✅ Wallet connected successfully!');
+                } catch (error) {
+                    alert('Failed to connect wallet: ' + error.message);
+                }
+            } else {
+                alert('Please install MetaMask or another Web3 wallet!');
+            }
+        }
+        
+        function selectMethod(method) {
+            cloneMethod = method;
+            document.querySelectorAll('.template-card').forEach(c => c.classList.remove('active'));
+            event.target.closest('.template-card').classList.add('active');
+            
+            if (method === 'popular') {
+                showPopularTemplates();
+            }
+        }
+        
+        function showPopularTemplates() {
+            // Could show pre-verified popular token templates
+            alert('Popular templates feature - pre-verified tokens like ERC20, BEP20 standard templates');
+        }
+        
+        async function fetchContract() {
+            const address = document.getElementById('sourceAddress').value.trim();
+            
+            if (!address) {
+                alert('Please enter token address!');
+                return;
+            }
+            
+            if (!address.startsWith('0x') || address.length !== 42) {
+                alert('Invalid contract address format!');
+                return;
+            }
+            
+            // Simulate fetching contract
+            alert('🔍 Fetching contract from blockchain explorer...');
+            
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Simulated contract data
+            sourceToken = {
+                address: address,
+                name: 'Example Token',
+                symbol: 'EXMPL',
+                decimals: 18,
+                totalSupply: '1000000000',
+                features: ['ERC20', 'Ownable', 'Pausable', 'Burnable'],
+                sourceCode: `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract ExampleToken {
+    string public name = "Example Token";
+    string public symbol = "EXMPL";
+    uint8 public decimals = 18;
+    uint256 public totalSupply = 1000000000 * 10**18;
+    
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
+    
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+    
+    constructor() {
+        balanceOf[msg.sender] = totalSupply;
+    }
+    
+    function transfer(address to, uint256 value) public returns (bool) {
+        require(balanceOf[msg.sender] >= value, "Insufficient balance");
+        balanceOf[msg.sender] -= value;
+        balanceOf[to] += value;
+        emit Transfer(msg.sender, to, value);
+        return true;
+    }
+    
+    // Additional functions...
+}`
+            };
+            
+            document.getElementById('origName').textContent = sourceToken.name;
+            document.getElementById('origSymbol').textContent = sourceToken.symbol;
+            document.getElementById('origDecimals').textContent = sourceToken.decimals;
+            document.getElementById('origSupply').textContent = formatNumber(sourceToken.totalSupply);
+            
+            const featuresHtml = sourceToken.features.map(f => 
+                `<span style="background: #1f2937; padding: 0.3rem 0.8rem; border-radius: 4px; margin-right: 0.5rem; display: inline-block; margin-top: 0.3rem;">✓ ${f}</span>`
+            ).join('');
+            document.getElementById('contractFeatures').innerHTML = featuresHtml;
+            
+            document.getElementById('sourceCode').textContent = sourceToken.sourceCode;
+            
+            markStepCompleted(1);
+            document.getElementById('contractSection').classList.remove('hidden');
+            document.getElementById('contractSection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function nextStep(step) {
+            markStepCompleted(currentStep);
+            currentStep = step;
+            document.getElementById(`step${step}`).classList.add('active');
+            
+            if (step === 3) {
+                document.getElementById('sourceSection').classList.add('hidden');
+                document.getElementById('contractSection').classList.add('hidden');
+                document.getElementById('customSection').classList.remove('hidden');
+                
+                // Pre-fill with modified names
+                document.getElementById('newName').value = sourceToken.name + ' Clone';
+                document.getElementById('newSymbol').value = sourceToken.symbol + '2';
+                document.getElementById('newSupply').value = sourceToken.totalSupply;
+                document.getElementById('newDecimals').value = sourceToken.decimals;
+                
+                document.getElementById('customSection').scrollIntoView({ behavior: 'smooth' });
+            } else if (step === 4) {
+                showReview();
+            } else if (step === 5) {
+                showDeploy();
+            }
+        }
+        
+        function prevStep(step) {
+            document.getElementById(`step${currentStep}`).classList.remove('active');
+            currentStep = step;
+            
+            document.getElementById('customSection').classList.add('hidden');
+            document.getElementById('reviewSection').classList.add('hidden');
+            
+            if (step === 3) {
+                document.getElementById('customSection').classList.remove('hidden');
+            }
+        }
+        
+        function showReview() {
+            const newName = document.getElementById('newName').value;
+            const newSymbol = document.getElementById('newSymbol').value;
+            const newSupply = document.getElementById('newSupply').value;
+            const newDecimals = document.getElementById('newDecimals').value;
+            
+            if (!newName || !newSymbol || !newSupply) {
+                alert('Please fill all required fields!');
+                return;
+            }
+            
+            // Update comparison
+            document.getElementById('reviewOrigName').textContent = sourceToken.name;
+            document.getElementById('reviewOrigSymbol').textContent = sourceToken.symbol;
+            document.getElementById('reviewOrigSupply').textContent = formatNumber(sourceToken.totalSupply);
+            document.getElementById('reviewOrigDecimals').textContent = sourceToken.decimals;
+            
+            document.getElementById('reviewNewName').textContent = newName;
+            document.getElementById('reviewNewSymbol').textContent = newSymbol;
+            document.getElementById('reviewNewSupply').textContent = formatNumber(newSupply);
+            document.getElementById('reviewNewDecimals').textContent = newDecimals;
+            
+            // Generate modified code
+            let modifiedCode = sourceToken.sourceCode;
+            modifiedCode = modifiedCode.replace(
+                `name = "${sourceToken.name}"`,
+                `name = "${newName}"`
+            );
+            modifiedCode = modifiedCode.replace(
+                `symbol = "${sourceToken.symbol}"`,
+                `symbol = "${newSymbol}"`
+            );
+            modifiedCode = modifiedCode.replace(
+                `decimals = ${sourceToken.decimals}`,
+                `decimals = ${newDecimals}`
+            );
+            modifiedCode = modifiedCode.replace(
+                `totalSupply = ${sourceToken.totalSupply}`,
+                `totalSupply = ${newSupply}`
+            );
+            
+            document.getElementById('modifiedCode').textContent = modifiedCode;
+            
+            document.getElementById('customSection').classList.add('hidden');
+            document.getElementById('reviewSection').classList.remove('hidden');
+            document.getElementById('reviewSection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function showDeploy() {
+            currentChain = document.getElementById('blockchain').value;
+            const chainNames = {
+                ethereum: 'Ethereum',
+                polygon: 'Polygon',
+                bsc: 'BSC',
+                arbitrum: 'Arbitrum',
+                base: 'Base'
+            };
+            
+            document.getElementById('deployNetwork').textContent = chainNames[currentChain];
+            document.getElementById('estimatedGas').textContent = '~$' + (Math.random() * 50 + 20).toFixed(2);
+            
+            document.getElementById('reviewSection').classList.add('hidden');
+            document.getElementById('deploySection').classList.remove('hidden');
+            document.getElementById('deploySection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        async function deployContract() {
+            if (!confirm('Deploy contract? This will cost gas fees.')) {
+                return;
+            }
+            
+            document.getElementById('deployBtn').disabled = true;
+            document.getElementById('deployProgress').classList.remove('hidden');
+            document.getElementById('deployStatus').textContent = 'Deploying...';
+            document.getElementById('deployStatus').style.color = '#ffaa00';
+            
+            // Simulate deployment steps
+            const steps = [
+                'Compiling contract...',
+                'Estimating gas...',
+                'Sending transaction...',
+                'Waiting for confirmation...',
+                'Contract deployed!'
+            ];
+            
+            for (let i = 0; i < steps.length; i++) {
+                document.getElementById('deployStep').textContent = steps[i];
+                await new Promise(resolve => setTimeout(resolve, 1500));
+            }
+            
+            // Generate fake contract address
+            const newAddress = '0x' + Array(40).fill(0).map(() => 
+                Math.floor(Math.random() * 16).toString(16)).join('');
+            
+            document.getElementById('newContractAddress').textContent = newAddress;
+            document.getElementById('successName').textContent = document.getElementById('newName').value;
+            document.getElementById('successSymbol').textContent = document.getElementById('newSymbol').value;
+            document.getElementById('successSupply').textContent = formatNumber(document.getElementById('newSupply').value);
+            
+            markStepCompleted(5);
+            document.getElementById('deploySection').classList.add('hidden');
+            document.getElementById('successSection').classList.remove('hidden');
+            document.getElementById('successSection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function markStepCompleted(step) {
+            document.getElementById(`step${step}`).classList.add('completed');
+            document.getElementById(`step${step}`).classList.remove('active');
+        }
+        
+        function formatNumber(num) {
+            return parseFloat(num).toLocaleString();
+        }
+        
+        function viewOnExplorer() {
+            const address = document.getElementById('newContractAddress').textContent;
+            alert(`View on block explorer:\n${address}\n\n(Would open explorer in new tab)`);
+        }
+        
+        function cloneAnother() {
+            if (confirm('Start new token clone?')) {
+                location.reload();
+            }
+        }
+        
+        console.log('✅ Token Cloner Ready!');
+    </script>
+    <script src="js/chain-selector.js"></script>
+</body>
+</html>

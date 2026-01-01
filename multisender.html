@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Chain Bulk Sender</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #0a0e1a;
+            color: white;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 { color: #00d4ff; margin-bottom: 0.5rem; }
+        .subtitle { color: #8892b0; margin-bottom: 2rem; }
+        
+        .section {
+            background: #121826;
+            border: 2px solid #1f2937;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 0.8rem;
+            background: #0a0e1a;
+            border: 2px solid #1f2937;
+            color: white;
+            border-radius: 6px;
+            margin: 0.5rem 0;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+        
+        textarea {
+            min-height: 200px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+        
+        button {
+            width: 100%;
+            padding: 1rem;
+            background: #00d4ff;
+            color: #0a0e1a;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0.5rem 0;
+        }
+        
+        button:hover:not(:disabled) { 
+            background: #0099cc;
+            transform: translateY(-2px);
+        }
+        
+        button:disabled { 
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: #4a90e2;
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background: #357abd;
+        }
+        
+        .info-box {
+            background: #0a0e1a;
+            border-left: 4px solid #00d4ff;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        
+        .warning-box {
+            background: #2d1f15;
+            border-left: 4px solid #ffaa00;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            color: #ffcc88;
+        }
+        
+        .error-box {
+            background: #2d1215;
+            border-left: 4px solid #ff3366;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            color: #ff8899;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .stat {
+            background: #0a0e1a;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #1f2937;
+        }
+        
+        .stat-label {
+            color: #8892b0;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-value {
+            color: #00d4ff;
+            font-size: 1.5rem;
+            font-weight: bold;
+            font-family: monospace;
+        }
+        
+        .recipient-row {
+            background: #0a0e1a;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 0.5rem 0;
+            display: grid;
+            grid-template-columns: 3fr 1fr auto;
+            gap: 1rem;
+            align-items: center;
+            border: 2px solid #1f2937;
+        }
+        
+        .recipient-row.error {
+            border-color: #ff3366;
+        }
+        
+        .recipient-row.success {
+            border-color: #00d4ff;
+        }
+        
+        .recipient-address {
+            font-family: monospace;
+            font-size: 0.9rem;
+            word-break: break-all;
+        }
+        
+        .recipient-amount {
+            color: #00d4ff;
+            font-weight: bold;
+        }
+        
+        .status-badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+        
+        .status-pending {
+            background: #1f2937;
+            color: #8892b0;
+        }
+        
+        .status-success {
+            background: #00d4ff;
+            color: #0a0e1a;
+        }
+        
+        .status-error {
+            background: #ff3366;
+            color: white;
+        }
+        
+        .progress {
+            background: #0a0e1a;
+            height: 40px;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 1rem 0;
+            border: 2px solid #1f2937;
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #00d4ff, #0099cc);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0a0e1a;
+            font-weight: bold;
+        }
+        
+        .wallet-info {
+            background: #0a0e1a;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            border: 2px solid #00d4ff;
+        }
+        
+        .hidden { display: none; }
+        
+        label {
+            display: block;
+            color: #8892b0;
+            margin: 1rem 0 0.5rem 0;
+            font-weight: bold;
+        }
+        
+        .file-upload {
+            border: 2px dashed #1f2937;
+            padding: 2rem;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .file-upload:hover {
+            border-color: #00d4ff;
+            background: #0a0e1a;
+        }
+        
+        .file-upload input {
+            display: none;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: -2px;
+        }
+        
+        .tab {
+            padding: 1rem 1.5rem;
+            background: transparent;
+            border: 2px solid #1f2937;
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            color: #8892b0;
+            font-weight: bold;
+        }
+        
+        .tab.active {
+            background: #121826;
+            color: #00d4ff;
+        }
+        
+        .tx-link {
+            color: #4a90e2;
+            text-decoration: none;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+        
+        .tx-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>📤 Multi-Chain Bulk Sender</h1>
+    <p class="subtitle">Send tokens/coins to multiple addresses in one transaction</p>
+    <!-- Chain Selector -->
+    <div class="section" style="background: #121826; border: 2px solid #1f2937; border-radius: 12px; padding: 1.5rem; margin: 2rem 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <div style="color: #8892b0; font-size: 0.85rem; margin-bottom: 0.5rem;">Active Blockchain</div>
+                <div style="color: #00d4ff; font-size: 1.2rem; font-weight: bold;" id="activeChainDisplay">Ethereum</div>
+            </div>
+            <button onclick="openChainModal()" style="padding: 0.8rem 1.5rem; background: #00d4ff; color: #0a0e1a; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s;">
+                Change Chain
+            </button>
+        </div>
+        <div style="color: #8892b0; font-size: 0.85rem; text-align: center; margin-top: 1rem;">
+            Chain synced across all tools • 33 blockchains supported
+        </div>
+    </div>
+
+    
+    <!-- Wallet Connection -->
+    <div class="section">
+        <h3>1️⃣ Connect Wallet</h3>
+        <div id="walletSection">
+            <div id="walletDisconnected">
+                <p style="color: #8892b0; margin-bottom: 1rem;">Connect your wallet to begin</p>
+                <button onclick="connectWallet()">🔌 Connect Wallet</button>
+            </div>
+            <div id="walletConnected" class="hidden">
+                <div class="wallet-info">
+                    <div style="margin-bottom: 0.5rem;">
+                        <strong>Connected:</strong> <span id="walletType"></span>
+                    </div>
+                    <div style="margin-bottom: 0.5rem;">
+                        <strong>Address:</strong> <span id="walletAddress" style="font-family: monospace;"></span>
+                    </div>
+                    <div>
+                        <strong>Network:</strong> <span id="walletNetwork"></span>
+                    </div>
+                </div>
+                <button onclick="disconnectWallet()" style="background: #ff3366;">Disconnect</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Configuration -->
+    <div class="section">
+        <h3>2️⃣ Configure Transfer</h3>
+        
+        <div>
+                <label>Transfer Type</label>
+                <select id="transferType" onchange="updateTransferType()">
+                    <option value="native">Native Coin (ETH, BNB, SOL, etc.)</option>
+                    <option value="token">Token (ERC20, SPL, etc.)</option>
+                </select>
+            </div>
+        </div>
+        
+        <div id="tokenAddressSection" class="hidden">
+            <label>Token Contract Address</label>
+            <input type="text" id="tokenAddress" placeholder="0x... or token mint address">
+        </div>
+        
+        <div id="chainInfo" class="info-box"></div>
+    </div>
+    
+    <!-- Recipients Input -->
+    <div class="section">
+        <h3>3️⃣ Add Recipients</h3>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchInputMode('manual')">✍️ Manual Entry</button>
+            <button class="tab" onclick="switchInputMode('csv')">📄 CSV Import</button>
+        </div>
+        
+        <div id="manualMode" style="margin-top: 2rem;">
+            <label>Enter Recipients (one per line: address, amount)</label>
+            <textarea id="recipientsManual" placeholder="0x1234567890abcdef1234567890abcdef12345678, 0.1&#10;0xabcdefabcdefabcdefabcdefabcdefabcdefabcd, 0.2&#10;0x9876543210fedcba9876543210fedcba98765432, 0.15"></textarea>
+            
+            <div class="info-box">
+                <strong>Format:</strong> address, amount<br>
+                Example: 0x1234...5678, 0.1<br>
+                <br>
+                <strong>Tips:</strong><br>
+                • Separate address and amount with comma<br>
+                • One recipient per line<br>
+                • Amount in token/coin units (e.g., 0.1 ETH, not wei)
+            </div>
+        </div>
+        
+        <div id="csvMode" class="hidden" style="margin-top: 2rem;">
+            <div class="file-upload" onclick="document.getElementById('csvFile').click()">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">📄</div>
+                <div style="font-size: 1.1rem; margin-bottom: 0.5rem;">Click to upload CSV file</div>
+                <div style="color: #8892b0; font-size: 0.9rem;">or drag and drop here</div>
+                <input type="file" id="csvFile" accept=".csv" onchange="handleCSVUpload(event)">
+            </div>
+            
+            <div class="info-box">
+                <strong>CSV Format:</strong><br>
+                First line: address,amount<br>
+                Following lines: recipient data<br>
+                <br>
+                <strong>Example:</strong><br>
+                <code style="display: block; background: #000; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem;">
+                address,amount<br>
+                0x1234...5678,0.1<br>
+                0xabcd...efgh,0.2<br>
+                0x9876...5432,0.15
+                </code>
+            </div>
+            
+            <button onclick="downloadTemplate()" class="btn-secondary">📥 Download CSV Template</button>
+        </div>
+        
+        <button onclick="parseRecipients()" style="margin-top: 1rem;">✅ Validate Recipients</button>
+    </div>
+    
+    <!-- Review & Send -->
+    <div id="reviewSection" class="section hidden">
+        <h3>4️⃣ Review & Send</h3>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Total Recipients</div>
+                <div class="stat-value" id="totalRecipients">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Total Amount</div>
+                <div class="stat-value" id="totalAmount">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Est. Gas Fee</div>
+                <div class="stat-value" id="estimatedGas">~</div>
+            </div>
+        </div>
+        
+        <div id="recipientsList"></div>
+        
+        <div class="warning-box">
+            <strong>⚠️ Important:</strong><br>
+            • Review all addresses carefully<br>
+            • Wrong addresses = permanent loss of funds<br>
+            • Gas fees apply for each transaction<br>
+            • Transactions are irreversible
+        </div>
+        
+        <button id="sendBtn" onclick="executeSend()">🚀 Send to All Recipients</button>
+    </div>
+    
+    <!-- Progress -->
+    <div id="progressSection" class="section hidden">
+        <h3>⏳ Sending in Progress...</h3>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Completed</div>
+                <div class="stat-value" id="completedCount">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Failed</div>
+                <div class="stat-value" id="failedCount" style="color: #ff3366;">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Remaining</div>
+                <div class="stat-value" id="remainingCount">0</div>
+            </div>
+        </div>
+        
+        <div class="progress">
+            <div class="progress-bar" id="progressBar">0%</div>
+        </div>
+        
+        <div id="transactionsList"></div>
+    </div>
+    
+    <!-- Results -->
+    <div id="resultsSection" class="section hidden">
+        <h3>✅ Transfer Complete</h3>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Successful</div>
+                <div class="stat-value" id="successCount">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Failed</div>
+                <div class="stat-value" id="errorCount" style="color: #ff3366;">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Total Sent</div>
+                <div class="stat-value" id="totalSent">0</div>
+            </div>
+        </div>
+        
+        <div id="resultsList"></div>
+        
+        <button onclick="exportResults()" class="btn-secondary">📥 Export Results CSV</button>
+        <button onclick="reset()">🔄 Start New Transfer</button>
+    </div>
+    
+    <!-- Limits & Info -->
+    <div class="section">
+        <h3>📋 Batch Processing & Limits</h3>
+        
+        <div class="info-box">
+            <strong>✨ Unlimited Recipients - Auto Batch Splitting:</strong><br>
+            • No hard limit on total recipients!<br>
+            • Automatically splits into optimal batches<br>
+            • Recommended batch size: 50 recipients<br>
+            • Large lists (500+) processed in multiple packages<br>
+            • Progress tracking across all batches
+        </div>
+        
+        <div class="info-box">
+            <strong>Batch Sizes per Chain:</strong><br>
+            • Ethereum: 50 per batch (high gas)<br>
+            • Polygon: 100 per batch (low gas)<br>
+            • BSC: 100 per batch (low gas)<br>
+            • Arbitrum: 100 per batch (medium gas)<br>
+            • Solana: 100 per batch (very low gas)<br>
+            • Sui: 100 per batch (low gas)
+        </div>
+        
+        <div class="warning-box">
+            <strong>Gas Fees:</strong><br>
+            • Ethereum: Higher gas fees, especially during peak times<br>
+            • Polygon/BSC: Much lower fees, faster confirmation<br>
+            • Solana: Very low fees (~$0.00025 per transaction)<br>
+            • Sui: Low fees, fast finality<br>
+            <br>
+            Each recipient = separate transaction = gas fee
+        </div>
+        
+        <div class="info-box" style="border-color: #ffaa00;">
+            <strong>💰 Platform Fee Structure:</strong><br>
+            • Fee: 0.5% of total transfer amount<br>
+            • Minimum: 0.001 native tokens<br>
+            • Collected before transfers begin<br>
+            • Supports platform development and maintenance<br>
+            <br>
+            <strong>Example Fees:</strong><br>
+            • Transfer 10 ETH → Fee: 0.05 ETH<br>
+            • Transfer 100 MATIC → Fee: 0.5 MATIC<br>
+            • Transfer 1 SOL → Fee: 0.005 SOL<br>
+            • Transfer 0.1 ETH → Fee: 0.001 ETH (minimum)
+        </div>
+        
+        <div class="info-box">
+            <strong>Best Practices:</strong><br>
+            • Test with small amounts first<br>
+            • Verify all addresses before sending<br>
+            • Keep enough native coin for gas fees<br>
+            • Use CSV for large batches (easier to verify)<br>
+            • Monitor transaction confirmations<br>
+            • Save results CSV for record keeping
+        </div>
+        
+        <div class="section">
+            <h3>📚 Batch Examples</h3>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin: 2rem 0;">
+                <div class="info-box">
+                    <h4 style="color: #00d4ff; margin-bottom: 0.5rem;">Small Batch (1-50)</h4>
+                    <strong>Example:</strong> Team payroll<br>
+                    Recipients: 25 employees<br>
+                    Batches: 1 batch<br>
+                    Processing: Direct, no splitting<br>
+                    Time: ~2 minutes<br>
+                    <br>
+                    <strong>Ideal for:</strong><br>
+                    • Quick distributions<br>
+                    • Team payments<br>
+                    • Small airdrops
+                </div>
+                
+                <div class="info-box">
+                    <h4 style="color: #00d4ff; margin-bottom: 0.5rem;">Medium Batch (51-200)</h4>
+                    <strong>Example:</strong> Community airdrop<br>
+                    Recipients: 150 holders<br>
+                    Batches: 2-3 batches (50 each)<br>
+                    Processing: Auto-split<br>
+                    Time: ~10-15 minutes<br>
+                    <br>
+                    <strong>Ideal for:</strong><br>
+                    • Token distributions<br>
+                    • Contest winners<br>
+                    • Holder rewards
+                </div>
+                
+                <div class="info-box">
+                    <h4 style="color: #ffaa00; margin-bottom: 0.5rem;">Large Batch (201-500)</h4>
+                    <strong>Example:</strong> NFT mint refunds<br>
+                    Recipients: 400 minters<br>
+                    Batches: 4-8 batches<br>
+                    Processing: Auto-split with delays<br>
+                    Time: ~30-45 minutes<br>
+                    <br>
+                    <strong>Ideal for:</strong><br>
+                    • Mass refunds<br>
+                    • Large airdrops<br>
+                    • Snapshot distributions
+                </div>
+                
+                <div class="info-box">
+                    <h4 style="color: #ff3366; margin-bottom: 0.5rem;">Extra Large (500+)</h4>
+                    <strong>Example:</strong> DAO token launch<br>
+                    Recipients: 1000 participants<br>
+                    Batches: 10-20 batches<br>
+                    Processing: Multiple packages<br>
+                    Time: 1-2 hours<br>
+                    <br>
+                    <strong>Ideal for:</strong><br>
+                    • Token launches<br>
+                    • Large campaigns<br>
+                    • Mass distributions
+                </div>
+            </div>
+            
+            <div class="warning-box">
+                <strong>⏱️ Processing Large Batches:</strong><br>
+                • 500 recipients = ~10 batches (50 each) = ~45 minutes<br>
+                • 1000 recipients = ~20 batches = ~1.5 hours<br>
+                • 2000 recipients = ~40 batches = ~3 hours<br>
+                <br>
+                Keep browser tab open during entire process!<br>
+                Results are saved and can be exported at any time.
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/chain-selector.js"></script>
+
+
+    <script>
+        let connectedWallet = null;
+        let userAddress = null;
+        let recipients = [];
+        let results = [];
+                // Platform fee configuration
+        const PLATFORM_FEE = {
+            percentage: 0.5, // 0.5% fee
+            minFee: 0.001, // Minimum fee in native token
+            feeAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb' // Replace with your fee collection address
+        };
+        
+        const CHAIN_INFO = {
+            ethereum: {
+                name: 'Ethereum',
+                symbol: 'ETH',
+                decimals: 18,
+                explorer: 'https://etherscan.io/tx/',
+                maxBatch: 50
+            },
+            polygon: {
+                name: 'Polygon',
+                symbol: 'MATIC',
+                decimals: 18,
+                explorer: 'https://polygonscan.com/tx/',
+                maxBatch: 100
+            },
+            bsc: {
+                name: 'BSC',
+                symbol: 'BNB',
+                decimals: 18,
+                explorer: 'https://bscscan.com/tx/',
+                maxBatch: 100
+            },
+            arbitrum: {
+                name: 'Arbitrum',
+                symbol: 'ETH',
+                decimals: 18,
+                explorer: 'https://arbiscan.io/tx/',
+                maxBatch: 100
+            },
+            solana: {
+                name: 'Solana',
+                symbol: 'SOL',
+                decimals: 9,
+                explorer: 'https://solscan.io/tx/',
+                maxBatch: 100
+            },
+            sui: {
+                name: 'Sui',
+                symbol: 'SUI',
+                decimals: 9,
+                explorer: 'https://suiscan.xyz/mainnet/tx/',
+                maxBatch: 100
+            }
+        };
+        
+        function updateChainInfo() {
+            currentChain = document.getElementById('blockchain').value;
+            const info = CHAIN_INFO[currentChain];
+            const infoBox = document.getElementById('chainInfo');
+            
+            infoBox.innerHTML = `
+                <strong>Chain:</strong> ${info.name}<br>
+                <strong>Native Token:</strong> ${info.symbol}<br>
+                <strong>Max Recipients/Batch:</strong> ${info.maxBatch}<br>
+                <strong>Block Explorer:</strong> ${info.explorer.split('/')[2]}
+            `;
+        }
+        
+        function updateTransferType() {
+            const type = document.getElementById('transferType').value;
+            const tokenSection = document.getElementById('tokenAddressSection');
+            tokenSection.classList.toggle('hidden', type === 'native');
+        }
+        
+        function switchInputMode(mode) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('manualMode').classList.toggle('hidden', mode !== 'manual');
+            document.getElementById('csvMode').classList.toggle('hidden', mode !== 'csv');
+        }
+        
+        // === WALLET CONNECTION ===
+        let userAddress = null;
+        let connectedWallet = null;
+        
+        async function connectWallet() {
+            console.log('🔌 Connect Wallet clicked!');
+            console.log('Current chain:', currentChain);
+            console.log('Window.ethereum available:', typeof window.ethereum !== 'undefined');
+            console.log('Window.solana available:', typeof window.solana !== 'undefined');
+            
+            const chain = currentChain || 'ethereum';
+            const isEVM = !['solana', 'sui', 'aptos'].includes(chain);
+            
+            console.log('Chain:', chain, '| isEVM:', isEVM);
+            
+            if (isEVM) {
+                console.log('→ Calling connectEVMWallet()');
+                await connectEVMWallet();
+            } else if (chain === 'solana') {
+                await connectSolanaWallet();
+            } else {
+                alert('Wallet connection for ' + chain + ' coming soon!');
+            }
+        }
+        
+        async function connectEVMWallet() {
+            console.log('📱 connectEVMWallet called');
+            
+            if (typeof window.ethereum !== 'undefined') {
+                console.log('✅ window.ethereum found!');
+                try {
+                    console.log('Requesting accounts...');
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    console.log('Accounts received:', accounts);
+                    
+                    if (accounts.length === 0) {
+                        alert('No accounts found. Please unlock your wallet.');
+                        return;
+                    }
+                    
+                    userAddress = accounts[0];
+                    connectedWallet = 'MetaMask';
+                    
+                    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                    
+                    document.getElementById('walletDisconnected').classList.add('hidden');
+                    document.getElementById('walletConnected').classList.remove('hidden');
+                    document.getElementById('walletType').textContent = '🦊 MetaMask';
+                    document.getElementById('walletAddress').textContent = 
+                        userAddress.substring(0, 10) + '...' + userAddress.substring(userAddress.length - 8);
+                    
+                    if (document.getElementById('walletNetwork')) {
+                        document.getElementById('walletNetwork').textContent = getNetworkName(parseInt(chainId, 16));
+                    }
+                    
+                    console.log('✅ MetaMask connected:', userAddress);
+                    
+                    window.ethereum.on('accountsChanged', handleAccountsChanged);
+                    window.ethereum.on('chainChanged', () => window.location.reload());
+                    
+                } catch (error) {
+                    console.error('MetaMask error:', error);
+                    if (error.code === 4001) {
+                        alert('Connection rejected. Please approve the request in MetaMask.');
+                    } else {
+                        alert('MetaMask error: ' + error.message);
+                    }
+                }
+            } else {
+                alert('MetaMask not detected!
+
+Install MetaMask:
+1. Visit metamask.io
+2. Install browser extension
+3. Create/import wallet
+4. Refresh this page');
+            }
+        }
+        
+        async function connectSolanaWallet() {
+            if (typeof window.solana !== 'undefined' && window.solana.isPhantom) {
+                try {
+                    const resp = await window.solana.connect();
+                    userAddress = resp.publicKey.toString();
+                    connectedWallet = 'Phantom';
+                    
+                    document.getElementById('walletDisconnected').classList.add('hidden');
+                    document.getElementById('walletConnected').classList.remove('hidden');
+                    document.getElementById('walletType').textContent = '👻 Phantom';
+                    document.getElementById('walletAddress').textContent = 
+                        userAddress.substring(0, 10) + '...' + userAddress.substring(userAddress.length - 8);
+                    
+                    if (document.getElementById('walletNetwork')) {
+                        document.getElementById('walletNetwork').textContent = 'Solana Mainnet';
+                    }
+                    
+                    console.log('✅ Phantom connected:', userAddress);
+                    
+                    window.solana.on('accountChanged', (publicKey) => {
+                        if (publicKey) {
+                            userAddress = publicKey.toString();
+                            document.getElementById('walletAddress').textContent = 
+                                userAddress.substring(0, 10) + '...' + userAddress.substring(userAddress.length - 8);
+                        } else {
+                            disconnectWallet();
+                        }
+                    });
+                    
+                } catch (error) {
+                    console.error('Phantom error:', error);
+                    alert('Phantom connection failed: ' + error.message);
+                }
+            } else {
+                alert('Phantom not detected!
+
+Install Phantom:
+1. Visit phantom.app
+2. Install browser extension
+3. Create/import wallet
+4. Refresh this page');
+            }
+        }
+        
+        function handleAccountsChanged(accounts) {
+            if (accounts.length === 0) {
+                disconnectWallet();
+            } else {
+                userAddress = accounts[0];
+                document.getElementById('walletAddress').textContent = 
+                    userAddress.substring(0, 10) + '...' + userAddress.substring(userAddress.length - 8);
+            }
+        }
+        
+        function disconnectWallet() {
+            userAddress = null;
+            connectedWallet = null;
+            document.getElementById('walletDisconnected').classList.remove('hidden');
+            document.getElementById('walletConnected').classList.add('hidden');
+            console.log('Wallet disconnected');
+        }
+        
+        function getNetworkName(chainId) {
+            const networks = {
+                1: 'Ethereum', 5: 'Goerli', 11155111: 'Sepolia',
+                56: 'BSC', 97: 'BSC Testnet', 137: 'Polygon', 80001: 'Mumbai',
+                42161: 'Arbitrum', 10: 'Optimism', 8453: 'Base',
+                43114: 'Avalanche', 250: 'Fantom', 25: 'Cronos'
+            };
+            return networks[chainId] || 'Chain ' + chainId;
+        }
+        
+        function getNetworkName(chainId) {
+            const names = {
+                1: 'Ethereum Mainnet',
+                137: 'Polygon',
+                56: 'BSC',
+                42161: 'Arbitrum',
+                5: 'Goerli'
+            };
+            return names[chainId] || `Chain ID: ${chainId}`;
+        }
+        
+        function parseRecipients() {
+            const mode = document.querySelector('.tab.active').textContent.includes('Manual') ? 'manual' : 'csv';
+            const input = mode === 'manual' ? 
+                document.getElementById('recipientsManual').value :
+                document.getElementById('recipientsManual').value; // CSV will be set by handleCSVUpload
+            
+            if (!input.trim()) {
+                alert('Please enter recipients!');
+                return;
+            }
+            
+            recipients = [];
+            const lines = input.trim().split('\n');
+            const chain = document.getElementById('blockchain').value;
+            const maxBatch = CHAIN_INFO[chain].maxBatch;
+            
+            let errors = [];
+            
+            lines.forEach((line, idx) => {
+                if (!line.trim()) return;
+                
+                const parts = line.split(',').map(p => p.trim());
+                if (parts.length !== 2) {
+                    errors.push(`Line ${idx + 1}: Invalid format (need: address, amount)`);
+                    return;
+                }
+                
+                const [address, amountStr] = parts;
+                const amount = parseFloat(amountStr);
+                
+                // Validate address
+                if (chain === 'solana') {
+                    if (address.length < 32 || address.length > 44) {
+                        errors.push(`Line ${idx + 1}: Invalid Solana address length`);
+                        return;
+                    }
+                } else if (chain === 'sui') {
+                    if (!address.startsWith('0x') || address.length !== 66) {
+                        errors.push(`Line ${idx + 1}: Invalid Sui address (need 0x + 64 chars)`);
+                        return;
+                    }
+                } else {
+                    if (!address.startsWith('0x') || address.length !== 42) {
+                        errors.push(`Line ${idx + 1}: Invalid EVM address (need 0x + 40 chars)`);
+                        return;
+                    }
+                }
+                
+                // Validate amount
+                if (isNaN(amount) || amount <= 0) {
+                    errors.push(`Line ${idx + 1}: Invalid amount (must be positive number)`);
+                    return;
+                }
+                
+                recipients.push({ address, amount, status: 'pending' });
+            });
+            
+            if (recipients.length === 0) {
+                alert('No valid recipients found!');
+                return;
+            }
+            
+            // Calculate number of batches needed
+            const numBatches = Math.ceil(recipients.length / maxBatch);
+            
+            if (errors.length > 0) {
+                alert('Validation Errors:\n\n' + errors.join('\n'));
+                return;
+            }
+            
+            // Show batch info if splitting required
+            if (numBatches > 1) {
+                const batchInfo = `
+✅ ${recipients.length} recipients validated!
+
+📦 Will be split into ${numBatches} batches:
+   • Batch size: ${maxBatch} recipients
+   • Last batch: ${recipients.length % maxBatch || maxBatch} recipients
+   • Chain: ${CHAIN_INFO[chain].name}
+
+This allows you to send to unlimited recipients!
+Each batch will be processed sequentially.
+
+Continue?`;
+                
+                if (!confirm(batchInfo)) {
+                    return;
+                }
+            }
+            
+            showReview();
+        }
+        
+        function showReview() {
+            const chain = CHAIN_INFO[currentChain];
+            const total = recipients.reduce((sum, r) => sum + r.amount, 0);
+            
+            // Calculate platform fee
+            const feeAmount = Math.max(
+                total * (PLATFORM_FEE.percentage / 100),
+                PLATFORM_FEE.minFee
+            );
+            const totalWithFee = total + feeAmount;
+            
+            document.getElementById('totalRecipients').textContent = recipients.length;
+            document.getElementById('totalAmount').textContent = total.toFixed(6) + ' ' + chain.symbol;
+            document.getElementById('estimatedGas').textContent = '~$' + (recipients.length * 0.5).toFixed(2);
+            
+            // Add fee display to stats
+            const statsDiv = document.querySelector('#reviewSection .stats');
+            
+            // Check if fee stat already exists
+            let feeStat = document.getElementById('platformFee');
+            if (!feeStat) {
+                feeStat = document.createElement('div');
+                feeStat.className = 'stat';
+                feeStat.id = 'platformFee';
+                statsDiv.appendChild(feeStat);
+            }
+            
+            feeStat.innerHTML = `
+                <div class="stat-label">Platform Fee (${PLATFORM_FEE.percentage}%)</div>
+                <div class="stat-value" style="color: #ffaa00;">${feeAmount.toFixed(6)}</div>
+            `;
+            
+            const list = document.getElementById('recipientsList');
+            list.innerHTML = '<h4 style="margin: 1rem 0; color: #00d4ff;">Recipients List:</h4>';
+            
+            recipients.forEach((r, idx) => {
+                const row = document.createElement('div');
+                row.className = 'recipient-row';
+                row.innerHTML = `
+                    <div class="recipient-address">${r.address}</div>
+                    <div class="recipient-amount">${r.amount} ${chain.symbol}</div>
+                    <div class="status-badge status-pending">Pending</div>
+                `;
+                list.appendChild(row);
+            });
+            
+            // Add fee info box
+            const feeInfoBox = document.createElement('div');
+            feeInfoBox.className = 'info-box';
+            feeInfoBox.style.cssText = 'border-color: #ffaa00; margin: 1.5rem 0;';
+            feeInfoBox.innerHTML = `
+                <strong>💰 Payment Breakdown:</strong><br>
+                • Recipients Total: <strong>${total.toFixed(6)} ${chain.symbol}</strong><br>
+                • Platform Fee (${PLATFORM_FEE.percentage}%): <strong>${feeAmount.toFixed(6)} ${chain.symbol}</strong><br>
+                • Gas Fees (est.): <strong>~$${(recipients.length * 0.5).toFixed(2)}</strong><br>
+                <br>
+                <strong>Total Required: ${totalWithFee.toFixed(6)} ${chain.symbol} + Gas</strong><br>
+                <small style="color: #8892b0;">Platform fee supports development and maintenance</small>
+            `;
+            
+            list.insertAdjacentElement('afterend', feeInfoBox);
+            
+            document.getElementById('reviewSection').classList.remove('hidden');
+            document.getElementById('reviewSection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        async function executeSend() {
+            if (!connectedWallet) {
+                alert('Please connect your wallet first!');
+                return;
+            }
+            
+            const chain = document.getElementById('blockchain').value;
+            const maxBatch = CHAIN_INFO[chain].maxBatch;
+            const numBatches = Math.ceil(recipients.length / maxBatch);
+            
+            // Calculate platform fee
+            const total = recipients.reduce((sum, r) => sum + r.amount, 0);
+            const feeAmount = Math.max(
+                total * (PLATFORM_FEE.percentage / 100),
+                PLATFORM_FEE.minFee
+            );
+            
+            const confirmMsg = numBatches > 1 ? 
+                `Send to ${recipients.length} recipients in ${numBatches} batches?\n\n` +
+                `Batch 1-${numBatches - 1}: ${maxBatch} recipients each\n` +
+                `Batch ${numBatches}: ${recipients.length % maxBatch || maxBatch} recipients\n\n` +
+                `Recipients Total: ${total.toFixed(6)} ${CHAIN_INFO[chain].symbol}\n` +
+                `Platform Fee (${PLATFORM_FEE.percentage}%): ${feeAmount.toFixed(6)} ${CHAIN_INFO[chain].symbol}\n` +
+                `Gas Fees: Additional (per transaction)\n\n` +
+                `Total transactions: ${recipients.length + 1} (includes 1 fee payment)` :
+                `Send to ${recipients.length} recipients?\n\n` +
+                `Recipients Total: ${total.toFixed(6)} ${CHAIN_INFO[chain].symbol}\n` +
+                `Platform Fee (${PLATFORM_FEE.percentage}%): ${feeAmount.toFixed(6)} ${CHAIN_INFO[chain].symbol}\n` +
+                `Gas Fees: Additional (per transaction)\n\n` +
+                `Total transactions: ${recipients.length + 1}`;
+            
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+            
+            document.getElementById('sendBtn').disabled = true;
+            document.getElementById('progressSection').classList.remove('hidden');
+            document.getElementById('progressSection').scrollIntoView({ behavior: 'smooth' });
+            
+            results = [];
+            let completed = 0;
+            let failed = 0;
+            let currentBatch = 1;
+            
+            // Step 1: Collect platform fee
+            try {
+                updateProgressText('💰 Processing platform fee payment...');
+                console.log(`💰 Collecting platform fee: ${feeAmount.toFixed(6)} ${CHAIN_INFO[chain].symbol}`);
+                
+                const feeTx = await sendTransaction({
+                    address: PLATFORM_FEE.feeAddress,
+                    amount: feeAmount
+                });
+                
+                console.log(`✅ Platform fee paid: ${feeTx}`);
+                
+                results.push({
+                    address: PLATFORM_FEE.feeAddress,
+                    amount: feeAmount,
+                    status: 'success',
+                    txHash: feeTx,
+                    type: 'platform_fee',
+                    batch: 0
+                });
+                
+                // Small delay after fee payment
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+            } catch (error) {
+                alert(`Failed to process platform fee: ${error.message}\n\nTransaction cancelled.`);
+                document.getElementById('sendBtn').disabled = false;
+                document.getElementById('progressSection').classList.add('hidden');
+                return;
+            }
+            
+            // Step 2: Process recipient batches
+            for (let batchStart = 0; batchStart < recipients.length; batchStart += maxBatch) {
+                const batchEnd = Math.min(batchStart + maxBatch, recipients.length);
+                const batchRecipients = recipients.slice(batchStart, batchEnd);
+                
+                console.log(`📦 Processing Batch ${currentBatch}/${numBatches}: Recipients ${batchStart + 1}-${batchEnd}`);
+                
+                // Show batch info if multiple batches
+                if (numBatches > 1) {
+                    updateProgressText(`Processing Batch ${currentBatch}/${numBatches} (${batchRecipients.length} recipients)`);
+                } else {
+                    updateProgressText(`Processing transfers to ${recipients.length} recipients...`);
+                }
+                
+                for (let i = 0; i < batchRecipients.length; i++) {
+                    const recipient = batchRecipients[i];
+                    
+                    try {
+                        const txHash = await sendTransaction(recipient);
+                        
+                        recipient.status = 'success';
+                        recipient.txHash = txHash;
+                        recipient.batch = currentBatch;
+                        completed++;
+                        
+                        results.push({
+                            address: recipient.address,
+                            amount: recipient.amount,
+                            status: 'success',
+                            txHash: txHash,
+                            type: 'transfer',
+                            batch: currentBatch
+                        });
+                        
+                    } catch (error) {
+                        recipient.status = 'error';
+                        recipient.error = error.message;
+                        recipient.batch = currentBatch;
+                        failed++;
+                        
+                        results.push({
+                            address: recipient.address,
+                            amount: recipient.amount,
+                            status: 'error',
+                            error: error.message,
+                            type: 'transfer',
+                            batch: currentBatch
+                        });
+                    }
+                    
+                    // Update progress
+                    document.getElementById('completedCount').textContent = completed;
+                    document.getElementById('failedCount').textContent = failed;
+                    document.getElementById('remainingCount').textContent = recipients.length - completed - failed;
+                    
+                    const progress = ((completed + failed) / recipients.length * 100);
+                    document.getElementById('progressBar').style.width = progress + '%';
+                    document.getElementById('progressBar').textContent = Math.floor(progress) + '%';
+                    
+                    // Update transaction list
+                    updateTransactionsList();
+                    
+                    // Small delay between transactions
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+                
+                // Delay between batches (if multiple batches)
+                if (currentBatch < numBatches) {
+                    console.log(`⏸️ Batch ${currentBatch} complete. Waiting 3 seconds before next batch...`);
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                }
+                
+                currentBatch++;
+            }
+            
+            showResults();
+        }
+        
+        function updateProgressText(text) {
+            const progressSection = document.getElementById('progressSection');
+            let textElement = progressSection.querySelector('.batch-info');
+            
+            if (!textElement) {
+                textElement = document.createElement('div');
+                textElement.className = 'batch-info';
+                textElement.style.cssText = 'text-align: center; color: #00d4ff; font-weight: bold; font-size: 1.1rem; margin: 1rem 0;';
+                progressSection.querySelector('h3').after(textElement);
+            }
+            
+            textElement.textContent = text;
+        }
+        
+        async function sendTransaction(recipient) {
+            // Simulate transaction (in real implementation, this would call Web3/Solana APIs)
+            console.log(`Sending ${recipient.amount} to ${recipient.address}`);
+            
+            // Simulate delay
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Simulate 90% success rate
+            if (Math.random() < 0.9) {
+                // Generate fake transaction hash
+                const txHash = '0x' + Array(64).fill(0).map(() => 
+                    Math.floor(Math.random() * 16).toString(16)).join('');
+                return txHash;
+            } else {
+                throw new Error('Transaction failed: Insufficient gas or network error');
+            }
+        }
+        
+        function updateTransactionsList() {
+            const list = document.getElementById('transactionsList');
+            const chain = CHAIN_INFO[currentChain];
+            
+            list.innerHTML = '<h4 style="margin: 1rem 0; color: #00d4ff;">Recent Transactions:</h4>';
+            
+            recipients.slice(-5).reverse().forEach(r => {
+                const row = document.createElement('div');
+                row.className = `recipient-row ${r.status === 'success' ? 'success' : r.status === 'error' ? 'error' : ''}`;
+                
+                let statusBadge = '';
+                if (r.status === 'success') {
+                    statusBadge = `<span class="status-badge status-success">✅ Success</span>`;
+                } else if (r.status === 'error') {
+                    statusBadge = `<span class="status-badge status-error">❌ Failed</span>`;
+                } else {
+                    statusBadge = `<span class="status-badge status-pending">⏳ Pending</span>`;
+                }
+                
+                row.innerHTML = `
+                    <div class="recipient-address">${r.address.substring(0, 20)}...</div>
+                    <div class="recipient-amount">${r.amount} ${chain.symbol}</div>
+                    <div>${statusBadge}</div>
+                `;
+                
+                if (r.txHash) {
+                    const link = document.createElement('div');
+                    link.innerHTML = `<a href="${chain.explorer}${r.txHash}" target="_blank" class="tx-link">View TX</a>`;
+                    row.appendChild(link);
+                }
+                
+                list.appendChild(row);
+            });
+        }
+        
+        function showResults() {
+            const successful = results.filter(r => r.status === 'success').length;
+            const failed = results.filter(r => r.status === 'error').length;
+            const totalSent = results
+                .filter(r => r.status === 'success')
+                .reduce((sum, r) => sum + r.amount, 0);
+            
+            const chain = CHAIN_INFO[currentChain];
+            
+            document.getElementById('successCount').textContent = successful;
+            document.getElementById('errorCount').textContent = failed;
+            document.getElementById('totalSent').textContent = totalSent.toFixed(6) + ' ' + chain.symbol;
+            
+            const list = document.getElementById('resultsList');
+            list.innerHTML = '<h4 style="margin: 1rem 0; color: #00d4ff;">All Transactions:</h4>';
+            
+            results.forEach((r, idx) => {
+                const row = document.createElement('div');
+                row.className = `recipient-row ${r.status === 'success' ? 'success' : 'error'}`;
+                
+                row.innerHTML = `
+                    <div>
+                        <div style="font-size: 0.85rem; color: #8892b0;">Recipient ${idx + 1}</div>
+                        <div class="recipient-address">${r.address}</div>
+                    </div>
+                    <div class="recipient-amount">${r.amount} ${chain.symbol}</div>
+                    <div>
+                        ${r.status === 'success' ?
+                            `<span class="status-badge status-success">✅ Success</span>` :
+                            `<span class="status-badge status-error">❌ Failed</span>`
+                        }
+                    </div>
+                `;
+                
+                if (r.txHash) {
+                    const link = document.createElement('div');
+                    link.innerHTML = `<a href="${chain.explorer}${r.txHash}" target="_blank" class="tx-link">View on ${chain.name} Explorer</a>`;
+                    row.appendChild(link);
+                }
+                
+                if (r.error) {
+                    const error = document.createElement('div');
+                    error.style.cssText = 'grid-column: 1/-1; color: #ff8899; font-size: 0.85rem; margin-top: 0.5rem;';
+                    error.textContent = 'Error: ' + r.error;
+                    row.appendChild(error);
+                }
+                
+                list.appendChild(row);
+            });
+            
+            document.getElementById('progressSection').classList.add('hidden');
+            document.getElementById('resultsSection').classList.remove('hidden');
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function handleCSVUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n');
+                
+                // Skip header if present
+                const start = lines[0].toLowerCase().includes('address') ? 1 : 0;
+                const data = lines.slice(start).filter(l => l.trim()).join('\n');
+                
+                document.getElementById('recipientsManual').value = data;
+                alert(`✅ Loaded ${lines.length - start} recipients from CSV`);
+            };
+            reader.readAsText(file);
+        }
+        
+        function downloadTemplate() {
+            const csv = `address,amount
+0x1234567890123456789012345678901234567890,0.1
+0xabcdefabcdefabcdefabcdefabcdefabcdefabcd,0.2
+0x9876543210987654321098765432109876543210,0.15`;
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'multisender-template.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        function exportResults() {
+            const chain = CHAIN_INFO[currentChain];
+            let csv = 'Type,Batch,Address,Amount,Status,Transaction Hash,Error\n';
+            
+            results.forEach(r => {
+                const type = r.type === 'platform_fee' ? 'Platform Fee' : 'Transfer';
+                csv += `${type},${r.batch || 1},"${r.address}",${r.amount},${r.status},"${r.txHash || ''}","${r.error || ''}"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `multisender-results-${chain.name}-${recipients.length}recipients-${Date.now()}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert('✅ Results exported to CSV!');
+        }
+        
+        function reset() {
+            recipients = [];
+            results = [];
+            
+            document.getElementById('recipientsManual').value = '';
+            document.getElementById('reviewSection').classList.add('hidden');
+            document.getElementById('progressSection').classList.add('hidden');
+            document.getElementById('resultsSection').classList.add('hidden');
+            document.getElementById('sendBtn').disabled = false;
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // Initialize
+        updateChainInfo();
+        console.log('✅ Multi-Chain Bulk Sender Ready!');
+    </script></body>
+</html>

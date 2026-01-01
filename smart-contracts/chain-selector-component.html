@@ -1,0 +1,158 @@
+<!-- Chain Selector Component - Include in all tools -->
+<div class="section" style="background: #121826; border: 2px solid #1f2937;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <div style="color: #8892b0; font-size: 0.85rem; margin-bottom: 0.5rem;">Active Blockchain</div>
+            <div style="color: #00d4ff; font-size: 1.2rem; font-weight: bold;" id="activeChainDisplay">Ethereum</div>
+        </div>
+        <button onclick="openChainModal()" style="padding: 0.8rem 1.5rem; background: #00d4ff; color: #0a0e1a; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
+            Change Chain
+        </button>
+    </div>
+</div>
+
+<script>
+// === SHARED CHAIN SELECTOR CODE ===
+const CHAIN_CONFIG = {
+    ethereum: { name: 'Ethereum', symbol: 'ETH', icon: '⟠' },
+    polygon: { name: 'Polygon', symbol: 'MATIC', icon: '⬡' },
+    bsc: { name: 'BNB Smart Chain', symbol: 'BNB', icon: '◆' },
+    arbitrum: { name: 'Arbitrum One', symbol: 'ETH', icon: '◢' },
+    optimism: { name: 'Optimism', symbol: 'ETH', icon: '🔴' },
+    base: { name: 'Base', symbol: 'ETH', icon: '🔵' },
+    avalanche: { name: 'Avalanche', symbol: 'AVAX', icon: '🔺' },
+    fantom: { name: 'Fantom', symbol: 'FTM', icon: '👻' },
+    cronos: { name: 'Cronos', symbol: 'CRO', icon: '⚡' },
+    zksync: { name: 'zkSync Era', symbol: 'ETH', icon: '⚡' },
+    polygonzk: { name: 'Polygon zkEVM', symbol: 'ETH', icon: '⬢' },
+    scroll: { name: 'Scroll', symbol: 'ETH', icon: '📜' },
+    linea: { name: 'Linea', symbol: 'ETH', icon: '▬' },
+    mantle: { name: 'Mantle', symbol: 'MNT', icon: '◭' },
+    blast: { name: 'Blast', symbol: 'ETH', icon: '💥' },
+    gnosis: { name: 'Gnosis', symbol: 'xDAI', icon: '◈' },
+    celo: { name: 'Celo', symbol: 'CELO', icon: '🌿' },
+    moonbeam: { name: 'Moonbeam', symbol: 'GLMR', icon: '🌙' },
+    moonriver: { name: 'Moonriver', symbol: 'MOVR', icon: '🌙' },
+    kava: { name: 'Kava EVM', symbol: 'KAVA', icon: '◆' },
+    metis: { name: 'Metis', symbol: 'METIS', icon: '◈' },
+    aurora: { name: 'Aurora', symbol: 'ETH', icon: '🌅' },
+    harmony: { name: 'Harmony', symbol: 'ONE', icon: '◈' },
+    canto: { name: 'Canto', symbol: 'CANTO', icon: '♪' },
+    evmos: { name: 'Evmos', symbol: 'EVMOS', icon: '⚛' },
+    opbnb: { name: 'opBNB', symbol: 'BNB', icon: '◇' },
+    klaytn: { name: 'Klaytn', symbol: 'KLAY', icon: '▣' },
+    solana: { name: 'Solana', symbol: 'SOL', icon: '◎' },
+    sui: { name: 'Sui', symbol: 'SUI', icon: '~' },
+    aptos: { name: 'Aptos', symbol: 'APT', icon: '◉' }
+};
+
+const CHAIN_CATEGORIES = {
+    'Layer 1 EVM': ['ethereum', 'bsc', 'avalanche', 'fantom', 'cronos'],
+    'Layer 2 / Scaling': ['polygon', 'arbitrum', 'optimism', 'base', 'zksync', 'polygonzk', 'scroll', 'linea', 'mantle', 'blast'],
+    'Other EVM': ['gnosis', 'celo', 'moonbeam', 'moonriver', 'kava', 'metis', 'aurora', 'harmony', 'canto', 'evmos', 'opbnb', 'klaytn'],
+    'Non-EVM': ['solana', 'sui', 'aptos']
+};
+
+let currentChain = localStorage.getItem('tokenforge_chain') || 'ethereum';
+
+function updateChainDisplay() {
+    const displayElement = document.getElementById('activeChainDisplay');
+    if (displayElement && CHAIN_CONFIG[currentChain]) {
+        displayElement.textContent = CHAIN_CONFIG[currentChain].name;
+    }
+}
+
+function openChainModal() {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.9); display: flex; align-items: center;
+        justify-content: center; z-index: 10000; padding: 1rem;
+    `;
+    
+    let categoriesHTML = '';
+    for (const [category, chains] of Object.entries(CHAIN_CATEGORIES)) {
+        categoriesHTML += `
+            <div style="margin: 1.5rem 0;">
+                <h4 style="color: #00d4ff; margin-bottom: 1rem; font-size: 0.9rem;">${category}</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.8rem;">
+                    ${chains.map(chain => `
+                        <button onclick="selectChainFromModal('${chain}')" style="
+                            padding: 1rem;
+                            background: ${chain === currentChain ? 'rgba(0, 212, 255, 0.1)' : '#0a0e1a'};
+                            border: 2px solid ${chain === currentChain ? '#00d4ff' : '#1f2937'};
+                            border-radius: 8px; color: white; cursor: pointer;
+                            font-weight: bold; transition: all 0.3s; text-align: center;
+                        ">
+                            <div style="font-size: 1.5rem; margin-bottom: 0.3rem;">${CHAIN_CONFIG[chain].icon}</div>
+                            <div style="font-size: 0.75rem;">${CHAIN_CONFIG[chain].name}</div>
+                            <div style="color: #8892b0; font-size: 0.65rem; margin-top: 0.2rem;">${CHAIN_CONFIG[chain].symbol}</div>
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    modal.innerHTML = `
+        <div style="background: #121826; border: 2px solid #1f2937; border-radius: 12px;
+            padding: 2rem; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="color: #00d4ff; margin: 0;">Select Blockchain</h3>
+                <button onclick="this.closest('div').parentElement.remove()"
+                    style="background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer;">✕</button>
+            </div>
+            ${categoriesHTML}
+            <button onclick="this.closest('div').parentElement.remove()"
+                style="width: 100%; margin-top: 1.5rem; padding: 1rem; background: #1f2937;
+                border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: bold;">
+                Cancel
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+}
+
+function selectChainFromModal(chain) {
+    currentChain = chain;
+    localStorage.setItem('tokenforge_chain', chain);
+    updateChainDisplay();
+    
+    // Remove modal
+    document.querySelectorAll('[style*="position: fixed"]').forEach(el => {
+        if (el.style.position === 'fixed') el.remove();
+    });
+    
+    // Show notification
+    const notif = document.createElement('div');
+    notif.style.cssText = `
+        position: fixed; top: 2rem; right: 2rem; background: #121826;
+        border: 2px solid #00d4ff; border-radius: 8px; padding: 1rem 1.5rem;
+        color: white; z-index: 10001; animation: slideIn 0.3s ease;
+    `;
+    notif.textContent = `✓ Switched to ${CHAIN_CONFIG[chain].name}`;
+    document.body.appendChild(notif);
+    setTimeout(() => notif.remove(), 2000);
+    
+    // Trigger any tool-specific chain change handlers
+    if (typeof onChainChanged === 'function') {
+        onChainChanged(chain);
+    }
+}
+
+// Initialize on load
+window.addEventListener('DOMContentLoaded', updateChainDisplay);
+
+// Listen for changes from other tabs
+window.addEventListener('storage', function(e) {
+    if (e.key === 'tokenforge_chain') {
+        currentChain = e.newValue;
+        updateChainDisplay();
+        if (typeof onChainChanged === 'function') {
+            onChainChanged(currentChain);
+        }
+    }
+});
+</script>

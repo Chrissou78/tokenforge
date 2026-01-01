@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Creator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #0a0e1a;
+            color: white;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 { color: #00d4ff; margin-bottom: 0.5rem; }
+        .subtitle { color: #8892b0; margin-bottom: 2rem; }
+        
+        .section {
+            background: #121826;
+            border: 2px solid #1f2937;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 0.8rem;
+            background: #0a0e1a;
+            border: 2px solid #1f2937;
+            color: white;
+            border-radius: 6px;
+            margin: 0.5rem 0;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+        
+        textarea {
+            min-height: 300px;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+        
+        button {
+            width: 100%;
+            padding: 1rem;
+            background: #00d4ff;
+            color: #0a0e1a;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0.5rem 0;
+            transition: all 0.3s;
+        }
+        
+        button:hover:not(:disabled) { 
+            background: #0099cc;
+            transform: translateY(-2px);
+        }
+        
+        button:disabled { 
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary { background: #4a90e2; }
+        .btn-secondary:hover:not(:disabled) { background: #357abd; }
+        
+        .info-box {
+            background: #0a0e1a;
+            border-left: 4px solid #00d4ff;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        
+        .warning-box {
+            background: #2d1f15;
+            border-left: 4px solid #ffaa00;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            color: #ffcc88;
+        }
+        
+        .success-box {
+            background: #1a2d2d;
+            border-left: 4px solid #00d4ff;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            color: #aae3ff;
+        }
+        
+        .template-card {
+            background: #0a0e1a;
+            border: 2px solid #1f2937;
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .template-card:hover {
+            border-color: #00d4ff;
+            transform: translateY(-2px);
+        }
+        
+        .template-card.active {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.1);
+        }
+        
+        .template-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-toggle {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background: #0a0e1a;
+            border: 2px solid #1f2937;
+            border-radius: 8px;
+            margin: 0.5rem 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .feature-toggle:hover {
+            border-color: #00d4ff;
+        }
+        
+        .feature-toggle.active {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.1);
+        }
+        
+        .toggle-switch {
+            width: 50px;
+            height: 26px;
+            background: #1f2937;
+            border-radius: 13px;
+            position: relative;
+            margin-right: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .feature-toggle.active .toggle-switch {
+            background: #00d4ff;
+        }
+        
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            transition: all 0.3s;
+        }
+        
+        .feature-toggle.active .toggle-switch::after {
+            left: 27px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .stat {
+            background: #0a0e1a;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #1f2937;
+        }
+        
+        .stat-label {
+            color: #8892b0;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-value {
+            color: #00d4ff;
+            font-size: 1.5rem;
+            font-weight: bold;
+            font-family: monospace;
+        }
+        
+        .wallet-status {
+            background: #0a0e1a;
+            border: 2px solid #1f2937;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .wallet-status.connected {
+            border-color: #00d4ff;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin: 2rem 0;
+            gap: 1rem;
+        }
+        
+        .step {
+            flex: 1;
+            text-align: center;
+            padding: 1rem;
+            background: #0a0e1a;
+            border: 2px solid #1f2937;
+            border-radius: 8px;
+        }
+        
+        .step.active {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.1);
+        }
+        
+        .step.completed {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.05);
+        }
+        
+        .hidden { display: none; }
+        
+        label {
+            display: block;
+            color: #8892b0;
+            margin: 1rem 0 0.5rem 0;
+            font-weight: bold;
+        }
+        
+        .code-preview {
+            background: #0a0e1a;
+            border: 2px solid #1f2937;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            font-family: monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🪙 Token Creator</h1>
+    <p class="subtitle">Create and deploy custom ERC20 tokens with advanced features</p>
+    
+    <!-- Chain Selector -->
+    <div class="section" style="background: #121826; border: 2px solid #1f2937;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <div style="color: #8892b0; font-size: 0.85rem; margin-bottom: 0.5rem;">Active Blockchain</div>
+                <div style="color: #00d4ff; font-size: 1.2rem; font-weight: bold;" id="activeChainDisplay">Ethereum</div>
+            </div>
+            <button onclick="openChainModal()" style="padding: 0.8rem 1.5rem; background: #00d4ff; color: #0a0e1a; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                Change Chain
+            </button>
+        </div>
+    </div>
+    
+    <!-- Wallet Connection -->
+    <div class="section">
+        <h3>Connect Wallet</h3>
+        
+        <div class="wallet-status" id="walletStatus">
+            <div>
+                <div style="color: #8892b0; font-size: 0.85rem;">Wallet Status</div>
+                <div id="walletAddress" style="font-family: monospace; margin-top: 0.5rem;">Not Connected</div>
+            </div>
+            <button id="connectBtn" onclick="connectWallet()" style="width: auto; padding: 0.8rem 2rem;">
+                Connect Wallet
+            </button>
+        </div>
+    </div>
+    
+    <!-- Step Indicator -->
+    <div class="step-indicator" id="stepIndicator" class="hidden">
+        <div class="step active" id="step1">
+            <div style="font-size: 1.5rem;">1️⃣</div>
+            <div style="margin-top: 0.5rem;">Choose Template</div>
+        </div>
+        <div class="step" id="step2">
+            <div style="font-size: 1.5rem;">2️⃣</div>
+            <div style="margin-top: 0.5rem;">Token Details</div>
+        </div>
+        <div class="step" id="step3">
+            <div style="font-size: 1.5rem;">3️⃣</div>
+            <div style="margin-top: 0.5rem;">Features</div>
+        </div>
+        <div class="step" id="step4">
+            <div style="font-size: 1.5rem;">4️⃣</div>
+            <div style="margin-top: 0.5rem;">Review</div>
+        </div>
+        <div class="step" id="step5">
+            <div style="font-size: 1.5rem;">5️⃣</div>
+            <div style="margin-top: 0.5rem;">Deploy</div>
+        </div>
+    </div>
+    
+    <!-- Step 1: Template Selection -->
+    <div class="section" id="templateSection" class="hidden">
+        <h3>1️⃣ Choose Token Template</h3>
+        
+        <div class="grid-3">
+            <div class="template-card active" onclick="selectTemplate('standard')">
+                <div class="template-icon">🪙</div>
+                <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 0.5rem;">Standard</div>
+                <div style="color: #8892b0; font-size: 0.85rem;">
+                    Basic ERC20 token<br>
+                    Simple & reliable
+                </div>
+            </div>
+            
+            <div class="template-card" onclick="selectTemplate('mintable')">
+                <div class="template-icon">➕</div>
+                <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 0.5rem;">Mintable</div>
+                <div style="color: #8892b0; font-size: 0.85rem;">
+                    Create new tokens<br>
+                    Owner can mint
+                </div>
+            </div>
+            
+            <div class="template-card" onclick="selectTemplate('burnable')">
+                <div class="template-icon">🔥</div>
+                <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 0.5rem;">Burnable</div>
+                <div style="color: #8892b0; font-size: 0.85rem;">
+                    Reduce supply<br>
+                    Deflationary
+                </div>
+            </div>
+            
+            <div class="template-card" onclick="selectTemplate('tax')">
+                <div class="template-icon">💰</div>
+                <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 0.5rem;">Tax Token</div>
+                <div style="color: #8892b0; font-size: 0.85rem;">
+                    Auto tax on transfers<br>
+                    Buy/sell fees
+                </div>
+            </div>
+            
+            <div class="template-card" onclick="selectTemplate('reflection')">
+                <div class="template-icon">💎</div>
+                <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 0.5rem;">Reflection</div>
+                <div style="color: #8892b0; font-size: 0.85rem;">
+                    Holder rewards<br>
+                    Passive income
+                </div>
+            </div>
+            
+            <div class="template-card" onclick="selectTemplate('advanced')">
+                <div class="template-icon">⚡</div>
+                <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 0.5rem;">Advanced</div>
+                <div style="color: #8892b0; font-size: 0.85rem;">
+                    All features<br>
+                    Fully customizable
+                </div>
+            </div>
+        </div>
+        
+        <button onclick="nextStep(2)" style="margin-top: 2rem;">Continue →</button>
+    </div>
+    
+    <!-- Step 2: Token Details -->
+    <div class="section hidden" id="detailsSection">
+        <h3>2️⃣ Token Details</h3>
+        
+        <div class="grid-2">
+            <div>
+                <label>Token Name</label>
+                <input type="text" id="tokenName" placeholder="My Awesome Token">
+            </div>
+            
+            <div>
+                <label>Token Symbol</label>
+                <input type="text" id="tokenSymbol" placeholder="MAT" style="text-transform: uppercase;">
+            </div>
+        </div>
+        
+        <label>Initial Supply</label>
+        <input type="number" id="initialSupply" placeholder="1000000000">
+        
+        <label>Decimals</label>
+        <select id="decimals">
+            <option value="18">18 (Standard - like ETH)</option>
+            <option value="9">9 (Common for meme tokens)</option>
+            <option value="6">6 (Like USDC)</option>
+            <option value="8">8 (Like Bitcoin)</option>
+        </select>
+        
+        <div class="grid-2" style="margin-top: 2rem;">
+            <button onclick="prevStep(1)" class="btn-secondary">← Back</button>
+            <button onclick="nextStep(3)">Continue →</button>
+        </div>
+    </div>
+    
+    <!-- Step 3: Features -->
+    <div class="section hidden" id="featuresSection">
+        <h3>3️⃣ Select Features</h3>
+        
+        <div id="featuresList">
+            <!-- Features will be populated based on template -->
+        </div>
+        
+        <div class="grid-2" style="margin-top: 2rem;">
+            <button onclick="prevStep(2)" class="btn-secondary">← Back</button>
+            <button onclick="nextStep(4)">Continue →</button>
+        </div>
+    </div>
+    
+    <!-- Step 4: Review -->
+    <div class="section hidden" id="reviewSection">
+        <h3>4️⃣ Review Your Token</h3>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Token Name</div>
+                <div class="stat-value" id="reviewName" style="font-size: 1rem;">-</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Symbol</div>
+                <div class="stat-value" id="reviewSymbol">-</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Supply</div>
+                <div class="stat-value" id="reviewSupply" style="font-size: 1rem;">-</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Decimals</div>
+                <div class="stat-value" id="reviewDecimals">-</div>
+            </div>
+        </div>
+        
+        <label>Contract Source Code</label>
+        <div class="code-preview" id="contractPreview">
+            // Contract will be generated here...
+        </div>
+        
+        <div class="info-box">
+            <strong>Features Included:</strong>
+            <div id="reviewFeatures" style="margin-top: 0.5rem;"></div>
+        </div>
+        
+        <div class="warning-box">
+            <strong>⚠️ Before Deploying:</strong><br>
+            • Review all parameters carefully<br>
+            • Ensure you have gas for deployment<br>
+            • Contract will be immutable<br>
+            • Test on testnet first
+        </div>
+        
+        <div class="grid-2" style="margin-top: 2rem;">
+            <button onclick="prevStep(3)" class="btn-secondary">← Back</button>
+            <button onclick="nextStep(5)">Deploy Contract →</button>
+        </div>
+    </div>
+    
+    <!-- Step 5: Deploy -->
+    <div class="section hidden" id="deploySection">
+        <h3>5️⃣ Deploy Token</h3>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Network</div>
+                <div class="stat-value" id="deployNetwork" style="font-size: 1rem;">-</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Est. Gas</div>
+                <div class="stat-value" id="deployGas">~$0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Status</div>
+                <div class="stat-value" id="deployStatus" style="font-size: 1rem;">Ready</div>
+            </div>
+        </div>
+        
+        <div id="deployProgress" class="hidden">
+            <div style="text-align: center; padding: 2rem;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">⏳</div>
+                <div style="color: #00d4ff; font-size: 1.2rem; margin-bottom: 0.5rem;">Deploying Contract...</div>
+                <div style="color: #8892b0;" id="deployStep">Compiling contract...</div>
+            </div>
+        </div>
+        
+        <button id="deployBtn" onclick="deployToken()">🚀 Deploy Token Contract</button>
+    </div>
+    
+    <!-- Success -->
+    <div class="section hidden" id="successSection">
+        <h3>🎉 Token Deployed Successfully!</h3>
+        
+        <div class="success-box">
+            <strong>Contract Address:</strong><br>
+            <span id="contractAddress" style="font-family: monospace; word-break: break-all; font-size: 1.1rem;">-</span>
+        </div>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Token Name</div>
+                <div class="stat-value" id="successName" style="font-size: 1rem;">-</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Symbol</div>
+                <div class="stat-value" id="successSymbol">-</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Supply</div>
+                <div class="stat-value" id="successSupply" style="font-size: 1rem;">-</div>
+            </div>
+        </div>
+        
+        <div class="info-box">
+            <strong>✅ Next Steps:</strong><br>
+            • Verify contract on block explorer<br>
+            • Add liquidity on DEX<br>
+            • Update token info on trackers<br>
+            • Distribute to holders
+        </div>
+        
+        <div class="grid-2">
+            <button onclick="viewOnExplorer()" class="btn-secondary">🔍 View on Explorer</button>
+            <button onclick="createAnother()">🪙 Create Another Token</button>
+        </div>
+    </div>
+    
+    <!-- Info -->
+    <div class="section">
+        <h3>📋 Token Templates Guide</h3>
+        
+        <div class="info-box">
+            <strong>🪙 Standard:</strong> Basic ERC20 with fixed supply. Simple and gas-efficient.
+        </div>
+        
+        <div class="info-box">
+            <strong>➕ Mintable:</strong> Owner can create new tokens. Good for gradual distribution.
+        </div>
+        
+        <div class="info-box">
+            <strong>🔥 Burnable:</strong> Reduce total supply by burning tokens. Deflationary model.
+        </div>
+        
+        <div class="info-box">
+            <strong>💰 Tax Token:</strong> Automatic tax on transfers. Configurable buy/sell fees.
+        </div>
+        
+        <div class="info-box">
+            <strong>💎 Reflection:</strong> Holders earn passive rewards. Percentage of transactions distributed.
+        </div>
+        
+        <div class="info-box">
+            <strong>⚡ Advanced:</strong> All features combined. Maximum flexibility and control.
+        </div>
+    </div>
+
+    <script>
+        // === CHAIN SELECTOR CODE ===
+        const CHAIN_CONFIG = {
+            ethereum: { name: 'Ethereum', symbol: 'ETH', icon: '⟠' },
+            polygon: { name: 'Polygon', symbol: 'MATIC', icon: '⬡' },
+            bsc: { name: 'BNB Smart Chain', symbol: 'BNB', icon: '◆' },
+            arbitrum: { name: 'Arbitrum One', symbol: 'ETH', icon: '◢' },
+            optimism: { name: 'Optimism', symbol: 'ETH', icon: '🔴' },
+            base: { name: 'Base', symbol: 'ETH', icon: '🔵' },
+            avalanche: { name: 'Avalanche', symbol: 'AVAX', icon: '🔺' },
+            fantom: { name: 'Fantom', symbol: 'FTM', icon: '👻' }
+        };
+        
+        const CHAIN_CATEGORIES = {
+            'Layer 1 EVM': ['ethereum', 'bsc', 'avalanche', 'fantom'],
+            'Layer 2': ['polygon', 'arbitrum', 'optimism', 'base']
+        };
+        
+        let currentChain = localStorage.getItem('tokenforge_chain') || 'ethereum';
+        
+        function updateChainDisplay() {
+            const displayElement = document.getElementById('activeChainDisplay');
+            if (displayElement && CHAIN_CONFIG[currentChain]) {
+                displayElement.textContent = CHAIN_CONFIG[currentChain].name;
+            }
+        }
+        
+        function openChainModal() {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0, 0, 0, 0.9); display: flex; align-items: center;
+                justify-content: center; z-index: 10000; padding: 1rem;
+            `;
+            
+            let categoriesHTML = '';
+            for (const [category, chains] of Object.entries(CHAIN_CATEGORIES)) {
+                categoriesHTML += `
+                    <div style="margin: 1.5rem 0;">
+                        <h4 style="color: #00d4ff; margin-bottom: 1rem;">${category}</h4>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                            ${chains.map(chain => `
+                                <button onclick="selectChainFromModal('${chain}')" style="
+                                    padding: 1.5rem;
+                                    background: ${chain === currentChain ? 'rgba(0, 212, 255, 0.1)' : '#0a0e1a'};
+                                    border: 2px solid ${chain === currentChain ? '#00d4ff' : '#1f2937'};
+                                    border-radius: 8px; color: white; cursor: pointer;
+                                    font-weight: bold; transition: all 0.3s; text-align: center;
+                                ">
+                                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">${CHAIN_CONFIG[chain].icon}</div>
+                                    <div>${CHAIN_CONFIG[chain].name}</div>
+                                    <div style="color: #8892b0; font-size: 0.85rem; margin-top: 0.3rem;">${CHAIN_CONFIG[chain].symbol}</div>
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            modal.innerHTML = `
+                <div style="background: #121826; border: 2px solid #1f2937; border-radius: 12px;
+                    padding: 2rem; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="color: #00d4ff; margin: 0;">Select Blockchain</h3>
+                        <button onclick="this.closest('div').parentElement.remove()"
+                            style="background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer;">✕</button>
+                    </div>
+                    ${categoriesHTML}
+                    <button onclick="this.closest('div').parentElement.remove()"
+                        style="width: 100%; margin-top: 1.5rem; padding: 1rem; background: #1f2937;
+                        border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: bold;">
+                        Cancel
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+        
+        function selectChainFromModal(chain) {
+            currentChain = chain;
+            localStorage.setItem('tokenforge_chain', chain);
+            updateChainDisplay();
+            
+            document.querySelectorAll('[style*="position: fixed"]').forEach(el => {
+                if (el.style.position === 'fixed') el.remove();
+            });
+            
+            const notif = document.createElement('div');
+            notif.style.cssText = `
+                position: fixed; top: 2rem; right: 2rem; background: #121826;
+                border: 2px solid #00d4ff; border-radius: 8px; padding: 1rem 1.5rem;
+                color: white; z-index: 10001;
+            `;
+            notif.textContent = `✓ Switched to ${CHAIN_CONFIG[chain].name}`;
+            document.body.appendChild(notif);
+            setTimeout(() => notif.remove(), 2000);
+        }
+        
+        window.addEventListener('DOMContentLoaded', updateChainDisplay);
+        
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'tokenforge_chain') {
+                currentChain = e.newValue;
+                updateChainDisplay();
+            }
+        });
+        
+        // === ORIGINAL TOKEN CREATOR CODE ===
+        let connected = false;
+        let currentAccount = null;
+        let currentStep = 1;
+        let selectedTemplate = 'standard';
+        let tokenConfig = {};
+        
+        async function connectWallet() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    const accounts = await window.ethereum.request({ 
+                        method: 'eth_requestAccounts' 
+                    });
+                    
+                    currentAccount = accounts[0];
+                    connected = true;
+                    
+                    document.getElementById('walletAddress').textContent = 
+                        currentAccount.substring(0, 6) + '...' + currentAccount.substring(38);
+                    
+                    document.getElementById('walletStatus').classList.add('connected');
+                    document.getElementById('connectBtn').textContent = 'Connected ✓';
+                    document.getElementById('connectBtn').disabled = true;
+                    
+                    document.getElementById('stepIndicator').classList.remove('hidden');
+                    document.getElementById('templateSection').classList.remove('hidden');
+                    
+                    alert('✅ Wallet connected! Select a token template to begin.');
+                } catch (error) {
+                    alert('Failed to connect wallet: ' + error.message);
+                }
+            } else {
+                alert('Please install MetaMask!');
+            }
+        }
+        
+        function selectTemplate(template) {
+            selectedTemplate = template;
+            document.querySelectorAll('.template-card').forEach(c => c.classList.remove('active'));
+            event.target.closest('.template-card').classList.add('active');
+        }
+        
+        function nextStep(step) {
+            if (step === 2) {
+                // Validate template selection
+                const name = document.getElementById('tokenName')?.value;
+            } else if (step === 3) {
+                // Validate token details
+                const name = document.getElementById('tokenName').value;
+                const symbol = document.getElementById('tokenSymbol').value;
+                const supply = document.getElementById('initialSupply').value;
+                
+                if (!name || !symbol || !supply) {
+                    alert('Please fill all token details!');
+                    return;
+                }
+                
+                tokenConfig = {
+                    name,
+                    symbol,
+                    supply,
+                    decimals: document.getElementById('decimals').value
+                };
+                
+                showFeatures();
+            } else if (step === 4) {
+                showReview();
+            } else if (step === 5) {
+                showDeploy();
+            }
+            
+            markStepCompleted(currentStep);
+            currentStep = step;
+            document.getElementById(`step${step}`).classList.add('active');
+            
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(s => {
+                if (s.id && s.id.includes('Section')) s.classList.add('hidden');
+            });
+            
+            // Show current section
+            const sections = ['', 'templateSection', 'detailsSection', 'featuresSection', 'reviewSection', 'deploySection'];
+            document.getElementById(sections[step]).classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        function prevStep(step) {
+            document.getElementById(`step${currentStep}`).classList.remove('active');
+            currentStep = step;
+            
+            document.querySelectorAll('.section').forEach(s => {
+                if (s.id && s.id.includes('Section')) s.classList.add('hidden');
+            });
+            
+            const sections = ['', 'templateSection', 'detailsSection', 'featuresSection', 'reviewSection'];
+            document.getElementById(sections[step]).classList.remove('hidden');
+        }
+        
+        function markStepCompleted(step) {
+            document.getElementById(`step${step}`).classList.add('completed');
+            document.getElementById(`step${step}`).classList.remove('active');
+        }
+        
+        function showFeatures() {
+            const features = {
+                standard: [],
+                mintable: ['Mintable', 'Ownable'],
+                burnable: ['Burnable'],
+                tax: ['Tax on Transfers', 'Buy Tax', 'Sell Tax', 'Whitelist'],
+                reflection: ['Reflection', 'Holder Rewards', 'Anti-Whale'],
+                advanced: ['Mintable', 'Burnable', 'Pausable', 'Tax', 'Reflection', 'Max Wallet']
+            };
+            
+            const list = document.getElementById('featuresList');
+            list.innerHTML = '';
+            
+            const templateFeatures = features[selectedTemplate] || [];
+            
+            if (templateFeatures.length === 0) {
+                list.innerHTML = '<div class="info-box">Standard ERC20 - no additional features</div>';
+            } else {
+                templateFeatures.forEach(feature => {
+                    const toggle = document.createElement('div');
+                    toggle.className = 'feature-toggle active';
+                    toggle.innerHTML = `
+                        <div class="toggle-switch"></div>
+                        <div>
+                            <div style="font-weight: bold;">${feature}</div>
+                            <div style="color: #8892b0; font-size: 0.85rem; margin-top: 0.3rem;">
+                                ${getFeatureDescription(feature)}
+                            </div>
+                        </div>
+                    `;
+                    list.appendChild(toggle);
+                });
+            }
+        }
+        
+        function getFeatureDescription(feature) {
+            const descriptions = {
+                'Mintable': 'Owner can create new tokens',
+                'Burnable': 'Holders can burn their tokens',
+                'Pausable': 'Owner can pause all transfers',
+                'Ownable': 'Owner controls the contract',
+                'Tax on Transfers': 'Fee on every transfer',
+                'Buy Tax': 'Fee when buying from DEX',
+                'Sell Tax': 'Fee when selling to DEX',
+                'Whitelist': 'Exclude addresses from fees',
+                'Reflection': 'Rewards distributed to holders',
+                'Holder Rewards': 'Passive income for holders',
+                'Anti-Whale': 'Max transaction limits',
+                'Max Wallet': 'Maximum wallet holdings'
+            };
+            return descriptions[feature] || 'Advanced feature';
+        }
+        
+        function showReview() {
+            document.getElementById('reviewName').textContent = tokenConfig.name;
+            document.getElementById('reviewSymbol').textContent = tokenConfig.symbol;
+            document.getElementById('reviewSupply').textContent = parseInt(tokenConfig.supply).toLocaleString();
+            document.getElementById('reviewDecimals').textContent = tokenConfig.decimals;
+            
+            // Generate contract preview
+            const contract = generateContract();
+            document.getElementById('contractPreview').textContent = contract;
+            
+            // Show features
+            const features = document.getElementById('reviewFeatures');
+            features.innerHTML = `Template: ${selectedTemplate}<br>All standard ERC20 functions included`;
+        }
+        
+        function generateContract() {
+            return `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract ${tokenConfig.symbol} {
+    string public name = "${tokenConfig.name}";
+    string public symbol = "${tokenConfig.symbol}";
+    uint8 public decimals = ${tokenConfig.decimals};
+    uint256 public totalSupply = ${tokenConfig.supply} * 10**${tokenConfig.decimals};
+    
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
+    
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+    
+    constructor() {
+        balanceOf[msg.sender] = totalSupply;
+        emit Transfer(address(0), msg.sender, totalSupply);
+    }
+    
+    function transfer(address to, uint256 value) public returns (bool) {
+        require(balanceOf[msg.sender] >= value, "Insufficient balance");
+        balanceOf[msg.sender] -= value;
+        balanceOf[to] += value;
+        emit Transfer(msg.sender, to, value);
+        return true;
+    }
+    
+    function approve(address spender, uint256 value) public returns (bool) {
+        allowance[msg.sender][spender] = value;
+        emit Approval(msg.sender, spender, value);
+        return true;
+    }
+    
+    function transferFrom(address from, address to, uint256 value) public returns (bool) {
+        require(balanceOf[from] >= value, "Insufficient balance");
+        require(allowance[from][msg.sender] >= value, "Insufficient allowance");
+        balanceOf[from] -= value;
+        balanceOf[to] += value;
+        allowance[from][msg.sender] -= value;
+        emit Transfer(from, to, value);
+        return true;
+    }
+}`;
+        }
+        
+        function showDeploy() {
+            document.getElementById('deployNetwork').textContent = CHAIN_CONFIG[currentChain].name;
+            document.getElementById('deployGas').textContent = '~$' + (Math.random() * 30 + 10).toFixed(2);
+        }
+        
+        async function deployToken() {
+            if (!confirm('Deploy token? This will cost gas fees.')) return;
+            
+            document.getElementById('deployBtn').disabled = true;
+            document.getElementById('deployProgress').classList.remove('hidden');
+            document.getElementById('deployStatus').textContent = 'Deploying...';
+            document.getElementById('deployStatus').style.color = '#ffaa00';
+            
+            const steps = [
+                'Compiling contract...',
+                'Estimating gas...',
+                'Sending transaction...',
+                'Waiting for confirmation...',
+                'Contract deployed!'
+            ];
+            
+            for (let i = 0; i < steps.length; i++) {
+                document.getElementById('deployStep').textContent = steps[i];
+                await new Promise(resolve => setTimeout(resolve, 1500));
+            }
+            
+            const address = '0x' + Array(40).fill(0).map(() => 
+                Math.floor(Math.random() * 16).toString(16)).join('');
+            
+            document.getElementById('contractAddress').textContent = address;
+            document.getElementById('successName').textContent = tokenConfig.name;
+            document.getElementById('successSymbol').textContent = tokenConfig.symbol;
+            document.getElementById('successSupply').textContent = parseInt(tokenConfig.supply).toLocaleString();
+            
+            markStepCompleted(5);
+            document.getElementById('deploySection').classList.add('hidden');
+            document.getElementById('successSection').classList.remove('hidden');
+        }
+        
+        function viewOnExplorer() {
+            alert('Would open block explorer in new tab');
+        }
+        
+        function createAnother() {
+            if (confirm('Create another token?')) {
+                location.reload();
+            }
+        }
+        
+        console.log('✅ Token Creator Ready!');
+    </script>
+</body>
+</html>

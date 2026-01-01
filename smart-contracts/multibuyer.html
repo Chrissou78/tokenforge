@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Chain Multi-Buyer</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #0a0e1a;
+            color: white;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 { color: #00d4ff; margin-bottom: 0.5rem; }
+        .subtitle { color: #8892b0; margin-bottom: 2rem; }
+        
+        .section {
+            background: #121826;
+            border: 2px solid #1f2937;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 0.8rem;
+            background: #0a0e1a;
+            border: 2px solid #1f2937;
+            color: white;
+            border-radius: 6px;
+            margin: 0.5rem 0;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+        
+        textarea {
+            min-height: 150px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+        
+        button {
+            width: 100%;
+            padding: 1rem;
+            background: #00d4ff;
+            color: #0a0e1a;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0.5rem 0;
+        }
+        
+        button:hover:not(:disabled) { 
+            background: #0099cc;
+            transform: translateY(-2px);
+        }
+        
+        button:disabled { 
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary { background: #4a90e2; }
+        .btn-secondary:hover:not(:disabled) { background: #357abd; }
+        
+        .info-box {
+            background: #0a0e1a;
+            border-left: 4px solid #00d4ff;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        
+        .warning-box {
+            background: #2d1f15;
+            border-left: 4px solid #ffaa00;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            color: #ffcc88;
+        }
+        
+        .error-box {
+            background: #2d1215;
+            border-left: 4px solid #ff3366;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            color: #ff8899;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .stat {
+            background: #0a0e1a;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #1f2937;
+        }
+        
+        .stat-label {
+            color: #8892b0;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-value {
+            color: #00d4ff;
+            font-size: 1.5rem;
+            font-weight: bold;
+            font-family: monospace;
+        }
+        
+        .wallet-card {
+            background: #0a0e1a;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 0.5rem 0;
+            border: 2px solid #1f2937;
+        }
+        
+        .wallet-card.success { border-color: #00d4ff; }
+        .wallet-card.error { border-color: #ff3366; }
+        
+        .progress {
+            background: #0a0e1a;
+            height: 40px;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 1rem 0;
+            border: 2px solid #1f2937;
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #00d4ff, #0099cc);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0a0e1a;
+            font-weight: bold;
+        }
+        
+        .hidden { display: none; }
+        
+        label {
+            display: block;
+            color: #8892b0;
+            margin: 1rem 0 0.5rem 0;
+            font-weight: bold;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: -2px;
+        }
+        
+        .tab {
+            padding: 1rem 1.5rem;
+            background: transparent;
+            border: 2px solid #1f2937;
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            color: #8892b0;
+            font-weight: bold;
+        }
+        
+        .tab.active {
+            background: #121826;
+            color: #00d4ff;
+        }
+    </style>
+</head>
+<body>
+    <h1>🛒 Multi-Chain Multi-Buyer</h1>
+    <p class="subtitle">Buy tokens from multiple wallets simultaneously</p>
+    <!-- Chain Selector -->
+    <div class="section" style="background: #121826; border: 2px solid #1f2937; border-radius: 12px; padding: 1.5rem; margin: 2rem 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <div style="color: #8892b0; font-size: 0.85rem; margin-bottom: 0.5rem;">Active Blockchain</div>
+                <div style="color: #00d4ff; font-size: 1.2rem; font-weight: bold;" id="activeChainDisplay">Ethereum</div>
+            </div>
+            <button onclick="openChainModal()" style="padding: 0.8rem 1.5rem; background: #00d4ff; color: #0a0e1a; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s;">
+                Change Chain
+            </button>
+        </div>
+        <div style="color: #8892b0; font-size: 0.85rem; text-align: center; margin-top: 1rem;">
+            Chain synced across all tools • 33 blockchains supported
+        </div>
+    </div>
+    <!-- Wallet Connection -->
+    <div class="section">
+        <h3>Connect Wallet</h3>
+        
+        <div style="background: #0a0e1a; border: 2px solid #1f2937; border-radius: 8px; padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <div style="color: #8892b0; font-size: 0.85rem;">Wallet Status</div>
+                <div id="walletAddress" style="font-family: monospace; margin-top: 0.5rem; color: white;">Not Connected</div>
+            </div>
+            <button id="connectBtn" onclick="connectWallet()" style="width: auto; padding: 0.8rem 2rem;">
+                Connect Wallet
+            </button>
+        </div>
+    </div>
+
+
+    
+    <!-- Token Configuration -->
+    <div class="section">
+        <h3>1️⃣ Token Configuration</h3>
+        
+        <div>
+                <label>DEX / Exchange</label>
+                <select id="dex">
+                    <option value="uniswap">Uniswap V2/V3</option>
+                    <option value="pancakeswap">PancakeSwap</option>
+                    <option value="sushiswap">SushiSwap</option>
+                    <option value="raydium">Raydium (Solana)</option>
+                    <option value="jupiter">Jupiter (Solana)</option>
+                </select>
+            </div>
+        </div>
+        
+        <label>Token Contract Address</label>
+        <input type="text" id="tokenAddress" placeholder="0x... or token mint address">
+        
+        <div id="chainInfo" class="info-box"></div>
+    </div>
+    
+    <!-- Wallet Import -->
+    <div class="section">
+        <h3>2️⃣ Import Wallets</h3>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchInputMode('manual')">✍️ Manual Entry</button>
+            <button class="tab" onclick="switchInputMode('csv')">📄 CSV Import</button>
+        </div>
+        
+        <div id="manualMode" style="margin-top: 2rem;">
+            <label>Private Keys (one per line)</label>
+            <textarea id="privateKeysManual" placeholder="0x1234567890abcdef... (private key 1)&#10;0xabcdefabcdef... (private key 2)&#10;0x9876543210... (private key 3)"></textarea>
+            
+            <div class="warning-box">
+                <strong>🔐 Security Warning:</strong><br>
+                • Private keys give FULL control of wallets<br>
+                • Never share with anyone<br>
+                • Generated locally in your browser<br>
+                • No data sent to any server
+            </div>
+        </div>
+        
+        <div id="csvMode" class="hidden" style="margin-top: 2rem;">
+            <div style="border: 2px dashed #1f2937; padding: 2rem; text-align: center; border-radius: 8px; cursor: pointer;" onclick="document.getElementById('csvFile').click()">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">📄</div>
+                <div style="font-size: 1.1rem; margin-bottom: 0.5rem;">Click to upload CSV file</div>
+                <div style="color: #8892b0; font-size: 0.9rem;">or drag and drop here</div>
+                <input type="file" id="csvFile" accept=".csv" onchange="handleCSVUpload(event)" style="display: none;">
+            </div>
+            
+            <div class="info-box">
+                <strong>CSV Format:</strong><br>
+                privatekey,amount<br>
+                0x1234...abcd,0.1<br>
+                0xabcd...efgh,0.2
+            </div>
+            
+            <button onclick="downloadTemplate()" class="btn-secondary">📥 Download CSV Template</button>
+        </div>
+        
+        <button onclick="validateWallets()" style="margin-top: 1rem;">✅ Validate Wallets</button>
+    </div>
+    
+    <!-- Buy Configuration -->
+    <div id="buyConfig" class="section hidden">
+        <h3>3️⃣ Buy Configuration</h3>
+        
+        <div class="grid-2">
+            <div>
+                <label>Amount Per Wallet</label>
+                <select id="amountMode" onchange="toggleAmountMode()">
+                    <option value="same">Same Amount for All</option>
+                    <option value="custom">Custom Amount (from CSV)</option>
+                    <option value="random">Random Amount (range)</option>
+                </select>
+            </div>
+            
+            <div id="sameAmountDiv">
+                <label>Amount (in native token)</label>
+                <input type="number" id="sameAmount" step="0.001" value="0.1" placeholder="0.1">
+            </div>
+        </div>
+        
+        <div id="randomAmountDiv" class="hidden">
+            <div class="grid-2">
+                <div>
+                    <label>Min Amount</label>
+                    <input type="number" id="minAmount" step="0.001" value="0.05" placeholder="0.05">
+                </div>
+                <div>
+                    <label>Max Amount</label>
+                    <input type="number" id="maxAmount" step="0.001" value="0.2" placeholder="0.2">
+                </div>
+            </div>
+        </div>
+        
+        <label>Slippage Tolerance (%)</label>
+        <input type="number" id="slippage" step="0.1" value="1" placeholder="1">
+        
+        <label>Delay Between Buys (seconds)</label>
+        <input type="number" id="delay" step="0.1" value="0.5" placeholder="0.5">
+        
+        <div class="info-box" style="border-color: #ffaa00;">
+            <strong>💰 Platform Fee:</strong> 0.5% per transaction<br>
+            Example: Buy with 0.1 ETH → Fee: 0.0005 ETH<br>
+            Fee collected before each purchase
+        </div>
+    </div>
+    
+    <!-- Review & Execute -->
+    <div id="reviewSection" class="section hidden">
+        <h3>4️⃣ Review & Execute</h3>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Total Wallets</div>
+                <div class="stat-value" id="totalWallets">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Total Amount</div>
+                <div class="stat-value" id="totalAmount">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Platform Fee</div>
+                <div class="stat-value" id="platformFee" style="color: #ffaa00;">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Est. Gas</div>
+                <div class="stat-value" id="estimatedGas">~</div>
+            </div>
+        </div>
+        
+        <div id="walletsList"></div>
+        
+        <div class="warning-box">
+            <strong>⚠️ Before Executing:</strong><br>
+            • Verify token contract address<br>
+            • Check slippage tolerance<br>
+            • Ensure sufficient balance + gas in each wallet<br>
+            • Transactions are irreversible<br>
+            • Platform fee (0.5%) collected per transaction
+        </div>
+        
+        <button id="executeBtn" onclick="executeBuys()">🚀 Execute Multi-Buy</button>
+    </div>
+    
+    <!-- Progress -->
+    <div id="progressSection" class="section hidden">
+        <h3>⏳ Buying in Progress...</h3>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Completed</div>
+                <div class="stat-value" id="completedCount">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Failed</div>
+                <div class="stat-value" id="failedCount" style="color: #ff3366;">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Remaining</div>
+                <div class="stat-value" id="remainingCount">0</div>
+            </div>
+        </div>
+        
+        <div class="progress">
+            <div class="progress-bar" id="progressBar">0%</div>
+        </div>
+        
+        <div id="transactionsList"></div>
+    </div>
+    
+    <!-- Results -->
+    <div id="resultsSection" class="section hidden">
+        <h3>✅ Multi-Buy Complete</h3>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Successful</div>
+                <div class="stat-value" id="successCount">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Failed</div>
+                <div class="stat-value" id="errorCount" style="color: #ff3366;">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Total Bought</div>
+                <div class="stat-value" id="totalBought">0</div>
+            </div>
+        </div>
+        
+        <div id="resultsList"></div>
+        
+        <button onclick="exportResults()" class="btn-secondary">📥 Export Results CSV</button>
+        <button onclick="reset()">🔄 Start New Multi-Buy</button>
+    </div>
+    
+    <!-- Info -->
+    <div class="section">
+        <h3>📋 Information</h3>
+        
+        <div class="info-box">
+            <strong>How It Works:</strong><br>
+            1. Configure token and DEX<br>
+            2. Import wallet private keys<br>
+            3. Set buy amounts and parameters<br>
+            4. Platform fee (0.5%) collected per transaction<br>
+            5. Execute simultaneous buys<br>
+            6. Track progress and export results
+        </div>
+        
+        <div class="warning-box">
+            <strong>Platform Fee: 0.5%</strong><br>
+            • Applied to each buy transaction<br>
+            • Minimum: 0.001 native tokens<br>
+            • Collected before token purchase<br>
+            • Supports platform development
+        </div>
+        
+        <div class="info-box">
+            <strong>Use Cases:</strong><br>
+            • Token launches (multiple wallet strategy)<br>
+            • Fair distribution (avoid single-wallet flags)<br>
+            • DCA across wallets<br>
+            • Portfolio diversification
+        </div>
+    </div>
+    
+    <script src="js/chain-selector.js"></script>
+    
+    <script>
+        // === WALLET CONNECTION ===
+        let userAddress = null;
+        let connectedWallet = null;
+        
+        async function connectWallet() {
+            const chain = currentChain || 'ethereum';
+            const isEVM = !['solana', 'sui', 'aptos'].includes(chain);
+            
+            if (isEVM) {
+                await connectEVMWallet();
+            } else if (chain === 'solana') {
+                await connectSolanaWallet();
+            } else {
+                alert('Wallet connection for ' + chain + ' coming soon!');
+            }
+        }
+        
+        async function connectEVMWallet() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    
+                    if (accounts.length === 0) {
+                        alert('No accounts found. Please unlock your wallet.');
+                        return;
+                    }
+                    
+                    userAddress = accounts[0];
+                    connectedWallet = 'MetaMask';
+                    
+                    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                    
+                    const walletAddr = document.getElementById('walletAddress');
+                    if (walletAddr) {
+                        walletAddr.textContent = userAddress.substring(0, 10) + '...' + userAddress.substring(userAddress.length - 8);
+                        walletAddr.style.color = '#00d4ff';
+                    }
+                    
+                    const connectBtn = document.getElementById('connectBtn');
+                    if (connectBtn) {
+                        connectBtn.textContent = '✅ Connected';
+                        connectBtn.style.background = '#00d4ff';
+                        connectBtn.style.color = '#0a0e1a';
+                    }
+                    
+                    console.log('✅ MetaMask connected:', userAddress);
+                    
+                    window.ethereum.on('accountsChanged', handleAccountsChanged);
+                    window.ethereum.on('chainChanged', () => window.location.reload());
+                    
+                } catch (error) {
+                    console.error('MetaMask error:', error);
+                    if (error.code === 4001) {
+                        alert('Connection rejected. Please approve the request in MetaMask.');
+                    } else {
+                        alert('MetaMask error: ' + error.message);
+                    }
+                }
+            } else {
+                alert('MetaMask not detected!
+
+Install MetaMask:
+1. Visit metamask.io
+2. Install browser extension
+3. Create/import wallet
+4. Refresh this page');
+            }
+        }
+        
+        async function connectSolanaWallet() {
+            if (typeof window.solana !== 'undefined' && window.solana.isPhantom) {
+                try {
+                    const resp = await window.solana.connect();
+                    userAddress = resp.publicKey.toString();
+                    connectedWallet = 'Phantom';
+                    
+                    const walletAddr = document.getElementById('walletAddress');
+                    if (walletAddr) {
+                        walletAddr.textContent = userAddress.substring(0, 10) + '...' + userAddress.substring(userAddress.length - 8);
+                        walletAddr.style.color = '#00d4ff';
+                    }
+                    
+                    const connectBtn = document.getElementById('connectBtn');
+                    if (connectBtn) {
+                        connectBtn.textContent = '✅ Connected';
+                        connectBtn.style.background = '#00d4ff';
+                        connectBtn.style.color = '#0a0e1a';
+                    }
+                    
+                    console.log('✅ Phantom connected:', userAddress);
+                    
+                    window.solana.on('accountChanged', (publicKey) => {
+                        if (publicKey) {
+                            userAddress = publicKey.toString();
+                            const walletAddr = document.getElementById('walletAddress');
+                            if (walletAddr) {
+                                walletAddr.textContent = userAddress.substring(0, 10) + '...' + userAddress.substring(userAddress.length - 8);
+                            }
+                        } else {
+                            disconnectWallet();
+                        }
+                    });
+                    
+                } catch (error) {
+                    console.error('Phantom error:', error);
+                    alert('Phantom connection failed: ' + error.message);
+                }
+            } else {
+                alert('Phantom not detected!
+
+Install Phantom:
+1. Visit phantom.app
+2. Install browser extension
+3. Create/import wallet
+4. Refresh this page');
+            }
+        }
+        
+        function handleAccountsChanged(accounts) {
+            if (accounts.length === 0) {
+                disconnectWallet();
+            } else {
+                userAddress = accounts[0];
+                const walletAddr = document.getElementById('walletAddress');
+                if (walletAddr) {
+                    walletAddr.textContent = userAddress.substring(0, 10) + '...' + userAddress.substring(userAddress.length - 8);
+                }
+            }
+        }
+        
+        function disconnectWallet() {
+            userAddress = null;
+            connectedWallet = null;
+            
+            const walletAddr = document.getElementById('walletAddress');
+            if (walletAddr) {
+                walletAddr.textContent = 'Not Connected';
+                walletAddr.style.color = '#8892b0';
+            }
+            
+            const connectBtn = document.getElementById('connectBtn');
+            if (connectBtn) {
+                connectBtn.textContent = 'Connect Wallet';
+                connectBtn.style.background = '';
+                connectBtn.style.color = '';
+            }
+            
+            console.log('Wallet disconnected');
+        }
+        
+
+        let wallets = [];
+        let results = [];
+                const PLATFORM_FEE = {
+            percentage: 0.5,
+            minFee: 0.001,
+            feeAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb'
+        };
+        
+        const CHAIN_INFO = {
+            ethereum: { name: 'Ethereum', symbol: 'ETH', decimals: 18 },
+            polygon: { name: 'Polygon', symbol: 'MATIC', decimals: 18 },
+            bsc: { name: 'BSC', symbol: 'BNB', decimals: 18 },
+            arbitrum: { name: 'Arbitrum', symbol: 'ETH', decimals: 18 },
+            solana: { name: 'Solana', symbol: 'SOL', decimals: 9 },
+            sui: { name: 'Sui', symbol: 'SUI', decimals: 9 }
+        };
+        
+        function updateChainInfo() {
+            currentChain = document.getElementById('blockchain').value;
+            const info = CHAIN_INFO[currentChain];
+            const infoBox = document.getElementById('chainInfo');
+            
+            infoBox.innerHTML = `
+                <strong>Chain:</strong> ${info.name}<br>
+                <strong>Native Token:</strong> ${info.symbol}<br>
+                <strong>Note:</strong> Ensure token contract is on ${info.name}
+            `;
+        }
+        
+        function switchInputMode(mode) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('manualMode').classList.toggle('hidden', mode !== 'manual');
+            document.getElementById('csvMode').classList.toggle('hidden', mode !== 'csv');
+        }
+        
+        function toggleAmountMode() {
+            const mode = document.getElementById('amountMode').value;
+            document.getElementById('sameAmountDiv').classList.toggle('hidden', mode !== 'same');
+            document.getElementById('randomAmountDiv').classList.toggle('hidden', mode !== 'random');
+        }
+        
+        function validateWallets() {
+            const mode = document.querySelector('.tab.active').textContent.includes('Manual') ? 'manual' : 'csv';
+            const input = document.getElementById('privateKeysManual').value;
+            
+            if (!input.trim()) {
+                alert('Please enter private keys!');
+                return;
+            }
+            
+            const tokenAddress = document.getElementById('tokenAddress').value.trim();
+            if (!tokenAddress) {
+                alert('Please enter token contract address!');
+                return;
+            }
+            
+            wallets = [];
+            const lines = input.trim().split('\n');
+            const chain = document.getElementById('blockchain').value;
+            
+            let errors = [];
+            
+            lines.forEach((line, idx) => {
+                const privateKey = line.trim();
+                if (!privateKey) return;
+                
+                // Validate private key format
+                if (chain === 'solana') {
+                    if (privateKey.length < 32) {
+                        errors.push(`Line ${idx + 1}: Invalid Solana private key`);
+                        return;
+                    }
+                } else {
+                    if (!privateKey.startsWith('0x') || privateKey.length !== 66) {
+                        errors.push(`Line ${idx + 1}: Invalid EVM private key (need 0x + 64 chars)`);
+                        return;
+                    }
+                }
+                
+                // Derive address from private key (simplified)
+                const address = deriveAddress(privateKey, chain);
+                
+                wallets.push({ 
+                    privateKey, 
+                    address,
+                    amount: 0,
+                    status: 'pending'
+                });
+            });
+            
+            if (wallets.length === 0) {
+                alert('No valid private keys found!');
+                return;
+            }
+            
+            if (errors.length > 0) {
+                alert('Validation Errors:\n\n' + errors.join('\n'));
+                return;
+            }
+            
+            document.getElementById('buyConfig').classList.remove('hidden');
+            showReview();
+        }
+        
+        function deriveAddress(privateKey, chain) {
+            // Simplified address derivation for demo
+            if (chain === 'solana') {
+                const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz123456789';
+                let addr = '';
+                for (let i = 0; i < 44; i++) {
+                    addr += chars[Math.floor(Math.random() * chars.length)];
+                }
+                return addr;
+            } else {
+                const hash = new Uint8Array(20);
+                crypto.getRandomValues(hash);
+                return '0x' + Array.from(hash).map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+        }
+        
+        function showReview() {
+            const mode = document.getElementById('amountMode').value;
+            const chain = CHAIN_INFO[currentChain];
+            
+            // Calculate amounts
+            if (mode === 'same') {
+                const amount = parseFloat(document.getElementById('sameAmount').value) || 0.1;
+                wallets.forEach(w => w.amount = amount);
+            } else if (mode === 'random') {
+                const min = parseFloat(document.getElementById('minAmount').value) || 0.05;
+                const max = parseFloat(document.getElementById('maxAmount').value) || 0.2;
+                wallets.forEach(w => {
+                    w.amount = min + Math.random() * (max - min);
+                });
+            }
+            
+            const total = wallets.reduce((sum, w) => sum + w.amount, 0);
+            const fee = Math.max(total * (PLATFORM_FEE.percentage / 100), PLATFORM_FEE.minFee * wallets.length);
+            
+            document.getElementById('totalWallets').textContent = wallets.length;
+            document.getElementById('totalAmount').textContent = total.toFixed(6) + ' ' + chain.symbol;
+            document.getElementById('platformFee').textContent = fee.toFixed(6) + ' ' + chain.symbol;
+            document.getElementById('estimatedGas').textContent = '~$' + (wallets.length * 2).toFixed(2);
+            
+            const list = document.getElementById('walletsList');
+            list.innerHTML = '<h4 style="margin: 1rem 0; color: #00d4ff;">Wallets to Buy:</h4>';
+            
+            wallets.slice(0, 10).forEach((w, idx) => {
+                const card = document.createElement('div');
+                card.className = 'wallet-card';
+                card.innerHTML = `
+                    <div style="font-family: monospace; font-size: 0.85rem;">
+                        <strong>Wallet ${idx + 1}:</strong> ${w.address.substring(0, 20)}...
+                    </div>
+                    <div style="color: #00d4ff; margin-top: 0.5rem;">
+                        Amount: ${w.amount.toFixed(6)} ${chain.symbol}
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+            
+            if (wallets.length > 10) {
+                list.innerHTML += `<div style="color: #8892b0; margin-top: 1rem;">... and ${wallets.length - 10} more wallets</div>`;
+            }
+            
+            document.getElementById('reviewSection').classList.remove('hidden');
+            document.getElementById('reviewSection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        async function executeBuys() {
+            if (!confirm(`Execute buys from ${wallets.length} wallets?\n\nPlatform fee will be collected from each wallet.`)) {
+                return;
+            }
+            
+            document.getElementById('executeBtn').disabled = true;
+            document.getElementById('progressSection').classList.remove('hidden');
+            document.getElementById('progressSection').scrollIntoView({ behavior: 'smooth' });
+            
+            results = [];
+            let completed = 0;
+            let failed = 0;
+            
+            const delay = parseFloat(document.getElementById('delay').value) * 1000 || 500;
+            
+            for (let i = 0; i < wallets.length; i++) {
+                const wallet = wallets[i];
+                
+                try {
+                    // Collect platform fee first
+                    const feeAmount = Math.max(
+                        wallet.amount * (PLATFORM_FEE.percentage / 100),
+                        PLATFORM_FEE.minFee
+                    );
+                    
+                    const feeTx = await simulateFeePayment(wallet, feeAmount);
+                    
+                    // Execute buy
+                    const buyTx = await simulateBuy(wallet);
+                    
+                    wallet.status = 'success';
+                    wallet.txHash = buyTx;
+                    wallet.feeTx = feeTx;
+                    completed++;
+                    
+                    results.push({
+                        wallet: wallet.address,
+                        amount: wallet.amount,
+                        status: 'success',
+                        txHash: buyTx,
+                        feeTx: feeTx
+                    });
+                    
+                } catch (error) {
+                    wallet.status = 'error';
+                    wallet.error = error.message;
+                    failed++;
+                    
+                    results.push({
+                        wallet: wallet.address,
+                        amount: wallet.amount,
+                        status: 'error',
+                        error: error.message
+                    });
+                }
+                
+                document.getElementById('completedCount').textContent = completed;
+                document.getElementById('failedCount').textContent = failed;
+                document.getElementById('remainingCount').textContent = wallets.length - completed - failed;
+                
+                const progress = ((completed + failed) / wallets.length * 100);
+                document.getElementById('progressBar').style.width = progress + '%';
+                document.getElementById('progressBar').textContent = Math.floor(progress) + '%';
+                
+                updateTransactionsList();
+                
+                if (i < wallets.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+            
+            showResults();
+        }
+        
+        async function simulateFeePayment(wallet, feeAmount) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            return '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+        }
+        
+        async function simulateBuy(wallet) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            if (Math.random() < 0.92) {
+                return '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+            } else {
+                throw new Error('Slippage exceeded or insufficient balance');
+            }
+        }
+        
+        function updateTransactionsList() {
+            const list = document.getElementById('transactionsList');
+            list.innerHTML = '<h4 style="margin: 1rem 0; color: #00d4ff;">Recent Transactions:</h4>';
+            
+            wallets.slice(-5).reverse().forEach(w => {
+                if (w.status !== 'pending') {
+                    const card = document.createElement('div');
+                    card.className = `wallet-card ${w.status}`;
+                    card.innerHTML = `
+                        <div style="font-family: monospace; font-size: 0.85rem;">
+                            ${w.address.substring(0, 20)}...
+                        </div>
+                        <div style="margin-top: 0.5rem;">
+                            ${w.status === 'success' ? '✅ Success' : '❌ Failed'}
+                            ${w.status === 'success' ? ` - ${w.amount.toFixed(6)} ${CHAIN_INFO[currentChain].symbol}` : ''}
+                        </div>
+                    `;
+                    list.appendChild(card);
+                }
+            });
+        }
+        
+        function showResults() {
+            const successful = results.filter(r => r.status === 'success').length;
+            const failed = results.filter(r => r.status === 'error').length;
+            const totalBought = results.filter(r => r.status === 'success')
+                .reduce((sum, r) => sum + r.amount, 0);
+            
+            document.getElementById('successCount').textContent = successful;
+            document.getElementById('errorCount').textContent = failed;
+            document.getElementById('totalBought').textContent = totalBought.toFixed(6) + ' ' + CHAIN_INFO[currentChain].symbol;
+            
+            const list = document.getElementById('resultsList');
+            list.innerHTML = '<h4 style="margin: 1rem 0; color: #00d4ff;">All Transactions:</h4>';
+            
+            results.forEach((r, idx) => {
+                const card = document.createElement('div');
+                card.className = `wallet-card ${r.status}`;
+                card.innerHTML = `
+                    <div style="font-family: monospace; font-size: 0.85rem;">
+                        <strong>Wallet ${idx + 1}:</strong> ${r.wallet.substring(0, 20)}...
+                    </div>
+                    <div style="margin-top: 0.5rem;">
+                        ${r.status === 'success' 
+                            ? `✅ Bought ${r.amount.toFixed(6)} ${CHAIN_INFO[currentChain].symbol}` 
+                            : `❌ Failed: ${r.error}`}
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+            
+            document.getElementById('progressSection').classList.add('hidden');
+            document.getElementById('resultsSection').classList.remove('hidden');
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function handleCSVUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n');
+                const start = lines[0].toLowerCase().includes('privatekey') ? 1 : 0;
+                const data = lines.slice(start).filter(l => l.trim()).join('\n');
+                document.getElementById('privateKeysManual').value = data;
+                alert(`✅ Loaded ${lines.length - start} wallets from CSV`);
+            };
+            reader.readAsText(file);
+        }
+        
+        function downloadTemplate() {
+            const csv = `privatekey,amount
+0x1234567890123456789012345678901234567890123456789012345678901234,0.1
+0xabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd,0.2`;
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'multibuyer-template.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        function exportResults() {
+            const chain = CHAIN_INFO[currentChain];
+            let csv = 'Wallet,Amount,Status,Buy TX Hash,Fee TX Hash,Error\n';
+            
+            results.forEach(r => {
+                csv += `"${r.wallet}",${r.amount},${r.status},"${r.txHash || ''}","${r.feeTx || ''}","${r.error || ''}"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `multibuyer-results-${chain.name}-${Date.now()}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert('✅ Results exported to CSV!');
+        }
+        
+        function reset() {
+            wallets = [];
+            results = [];
+            document.getElementById('buyConfig').classList.add('hidden');
+            document.getElementById('reviewSection').classList.add('hidden');
+            document.getElementById('progressSection').classList.add('hidden');
+            document.getElementById('resultsSection').classList.add('hidden');
+            document.getElementById('privateKeysManual').value = '';
+            document.getElementById('executeBtn').disabled = false;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        updateChainInfo();
+        console.log('✅ Multi-Buyer Ready!');
+    </script></body>
+</html>

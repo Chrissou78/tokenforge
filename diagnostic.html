@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wallet Connection Test</title>
+    <style>
+        body { font-family: Arial; padding: 40px; background: #0a0e1a; color: white; }
+        button { padding: 15px 30px; font-size: 16px; margin: 10px; cursor: pointer; }
+        .log { background: #1a1e2a; padding: 20px; margin: 20px 0; border-radius: 8px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Wallet Connection Diagnostic</h1>
+    
+    <div>
+        <button onclick="testMetaMask()">1. Test MetaMask</button>
+        <button onclick="testConnect()">2. Test Connect</button>
+        <button onclick="checkLocalStorage()">3. Check localStorage</button>
+        <button onclick="clearStorage()">4. Clear localStorage</button>
+    </div>
+    
+    <div class="log" id="log"></div>
+    
+    <script>
+        function log(msg) {
+            const logDiv = document.getElementById('log');
+            logDiv.innerHTML += msg + '<br>';
+            console.log(msg);
+        }
+        
+        function testMetaMask() {
+            document.getElementById('log').innerHTML = '';
+            log('Testing MetaMask...');
+            log('window.ethereum exists: ' + (typeof window.ethereum !== 'undefined'));
+            if (window.ethereum) {
+                log('window.ethereum.isMetaMask: ' + window.ethereum.isMetaMask);
+                log('window.ethereum.selectedAddress: ' + window.ethereum.selectedAddress);
+            } else {
+                log('❌ MetaMask not found!');
+            }
+        }
+        
+        async function testConnect() {
+            document.getElementById('log').innerHTML = '';
+            log('Testing connection...');
+            
+            if (typeof window.ethereum === 'undefined') {
+                log('❌ MetaMask not installed');
+                return;
+            }
+            
+            try {
+                log('Requesting accounts...');
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                log('✅ Accounts received: ' + accounts.length);
+                log('Account: ' + accounts[0]);
+                
+                // Save to localStorage
+                localStorage.setItem('connectedWallet', accounts[0]);
+                localStorage.setItem('walletConnected', 'true');
+                log('✅ Saved to localStorage');
+                
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+            }
+        }
+        
+        function checkLocalStorage() {
+            document.getElementById('log').innerHTML = '';
+            log('Checking localStorage...');
+            log('connectedWallet: ' + localStorage.getItem('connectedWallet'));
+            log('walletConnected: ' + localStorage.getItem('walletConnected'));
+            log('userDisconnected: ' + localStorage.getItem('userDisconnected'));
+        }
+        
+        function clearStorage() {
+            localStorage.removeItem('connectedWallet');
+            localStorage.removeItem('walletConnected');
+            localStorage.removeItem('userDisconnected');
+            log('✅ localStorage cleared');
+        }
+    </script>
+</body>
+</html>

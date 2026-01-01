@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wallet Detection Test</title>
+    <style>
+        body { 
+            font-family: Arial; 
+            padding: 40px; 
+            background: #0a0e1a; 
+            color: white;
+        }
+        .test-box {
+            background: #121826;
+            border: 2px solid #00d4ff;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        button {
+            background: #00d4ff;
+            color: #0a0e1a;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            font-weight: bold;
+        }
+        button:hover { background: #0099cc; }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1a1f2e;
+            border-radius: 8px;
+            font-family: monospace;
+        }
+        .success { color: #00ff88; }
+        .error { color: #ff3366; }
+    </style>
+</head>
+<body>
+    <h1>🔌 Wallet Detection Test</h1>
+    
+    <div class="test-box">
+        <h2>Step 1: Check if Extensions are Installed</h2>
+        <button onclick="checkExtensions()">Check Extensions</button>
+        <div id="extensionResult" class="result"></div>
+    </div>
+    
+    <div class="test-box">
+        <h2>Step 2: Test MetaMask Connection</h2>
+        <button onclick="testMetaMask()">Connect MetaMask</button>
+        <div id="metamaskResult" class="result"></div>
+    </div>
+    
+    <div class="test-box">
+        <h2>Step 3: Test Phantom Connection</h2>
+        <button onclick="testPhantom()">Connect Phantom</button>
+        <div id="phantomResult" class="result"></div>
+    </div>
+
+    <script>
+        function checkExtensions() {
+            const result = document.getElementById('extensionResult');
+            let html = '<h3>Extension Detection:</h3>';
+            
+            // Check MetaMask
+            if (typeof window.ethereum !== 'undefined') {
+                html += '<div class="success">✅ window.ethereum FOUND (MetaMask/EVM wallet available)</div>';
+            } else {
+                html += '<div class="error">❌ window.ethereum NOT FOUND (No MetaMask)</div>';
+            }
+            
+            // Check Phantom
+            if (typeof window.solana !== 'undefined') {
+                if (window.solana.isPhantom) {
+                    html += '<div class="success">✅ window.solana.isPhantom TRUE (Phantom available)</div>';
+                } else {
+                    html += '<div class="error">⚠️ window.solana exists but isPhantom is FALSE</div>';
+                }
+            } else {
+                html += '<div class="error">❌ window.solana NOT FOUND (No Phantom)</div>';
+            }
+            
+            result.innerHTML = html;
+        }
+        
+        async function testMetaMask() {
+            const result = document.getElementById('metamaskResult');
+            result.innerHTML = '<div>⏳ Testing MetaMask...</div>';
+            
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    const accounts = await window.ethereum.request({ 
+                        method: 'eth_requestAccounts' 
+                    });
+                    
+                    result.innerHTML = `
+                        <div class="success">
+                            <h3>✅ MetaMask Connected!</h3>
+                            <p>Address: ${accounts[0]}</p>
+                            <p>Accounts found: ${accounts.length}</p>
+                        </div>
+                    `;
+                } catch (error) {
+                    result.innerHTML = `
+                        <div class="error">
+                            <h3>❌ MetaMask Error</h3>
+                            <p>Error: ${error.message}</p>
+                            <p>Code: ${error.code}</p>
+                        </div>
+                    `;
+                }
+            } else {
+                result.innerHTML = '<div class="error">❌ MetaMask not installed</div>';
+            }
+        }
+        
+        async function testPhantom() {
+            const result = document.getElementById('phantomResult');
+            result.innerHTML = '<div>⏳ Testing Phantom...</div>';
+            
+            if (typeof window.solana !== 'undefined' && window.solana.isPhantom) {
+                try {
+                    const resp = await window.solana.connect();
+                    const address = resp.publicKey.toString();
+                    
+                    result.innerHTML = `
+                        <div class="success">
+                            <h3>✅ Phantom Connected!</h3>
+                            <p>Address: ${address}</p>
+                        </div>
+                    `;
+                } catch (error) {
+                    result.innerHTML = `
+                        <div class="error">
+                            <h3>❌ Phantom Error</h3>
+                            <p>Error: ${error.message}</p>
+                        </div>
+                    `;
+                }
+            } else {
+                result.innerHTML = '<div class="error">❌ Phantom not installed</div>';
+            }
+        }
+        
+        // Auto-check on load
+        window.addEventListener('load', checkExtensions);
+    </script>
+</body>
+</html>

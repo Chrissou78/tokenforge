@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wallet Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            background: #0a0e1a;
+            color: white;
+        }
+        button {
+            padding: 15px 30px;
+            background: #00d4ff;
+            color: #0a0e1a;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px;
+        }
+        button:hover {
+            background: #00a3cc;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 20px;
+            background: #1f2937;
+            border-radius: 8px;
+        }
+        .log {
+            background: #000;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔗 Wallet Connection Test</h1>
+    
+    <div class="status">
+        <h3>Status:</h3>
+        <div id="status">Not Connected</div>
+        <div id="address" style="margin-top: 10px; color: #00d4ff;"></div>
+    </div>
+    
+    <button onclick="testConnect()">Connect Wallet</button>
+    <button onclick="checkLocalStorage()">Check localStorage</button>
+    <button onclick="clearStorage()">Clear localStorage</button>
+    
+    <div class="log" id="log"></div>
+    
+    <script>
+        let currentAccount = null;
+        
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${time}] ${message}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+        
+        async function testConnect() {
+            log('=== CONNECT WALLET CLICKED ===');
+            
+            if (typeof window.ethereum === 'undefined') {
+                log('❌ ERROR: window.ethereum is undefined');
+                log('MetaMask is not installed!');
+                alert('Please install MetaMask!');
+                return;
+            }
+            
+            log('✅ window.ethereum exists');
+            log('window.ethereum:', window.ethereum);
+            
+            try {
+                log('Calling eth_requestAccounts...');
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                
+                log('✅ Accounts received: ' + JSON.stringify(accounts));
+                
+                if (accounts && accounts.length > 0) {
+                    currentAccount = accounts[0];
+                    log('✅ Current account: ' + currentAccount);
+                    
+                    // Save to localStorage
+                    localStorage.setItem('connectedWallet', currentAccount);
+                    localStorage.setItem('walletConnected', 'true');
+                    log('✅ Saved to localStorage');
+                    
+                    // Update UI
+                    document.getElementById('status').textContent = 'Connected ✅';
+                    document.getElementById('status').style.color = '#10b981';
+                    document.getElementById('address').textContent = currentAccount;
+                    
+                    log('✅ UI updated');
+                } else {
+                    log('❌ No accounts returned');
+                }
+                
+            } catch (error) {
+                log('❌ ERROR: ' + error.message);
+                log('Error code: ' + error.code);
+                log('Full error: ' + JSON.stringify(error));
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        function checkLocalStorage() {
+            log('=== CHECKING LOCALSTORAGE ===');
+            const wallet = localStorage.getItem('connectedWallet');
+            const connected = localStorage.getItem('walletConnected');
+            
+            log('connectedWallet: ' + wallet);
+            log('walletConnected: ' + connected);
+            
+            if (wallet) {
+                document.getElementById('status').textContent = 'Connected (from storage) ✅';
+                document.getElementById('status').style.color = '#10b981';
+                document.getElementById('address').textContent = wallet;
+                currentAccount = wallet;
+            }
+        }
+        
+        function clearStorage() {
+            log('=== CLEARING LOCALSTORAGE ===');
+            localStorage.clear();
+            log('✅ localStorage cleared');
+            
+            document.getElementById('status').textContent = 'Not Connected';
+            document.getElementById('status').style.color = 'white';
+            document.getElementById('address').textContent = '';
+            currentAccount = null;
+        }
+        
+        // Check on load
+        window.addEventListener('load', function() {
+            log('=== PAGE LOADED ===');
+            log('Checking for existing connection...');
+            checkLocalStorage();
+        });
+    </script>
+</body>
+</html>

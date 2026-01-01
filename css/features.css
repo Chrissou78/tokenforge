@@ -1,0 +1,205 @@
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin: 3rem 0;
+}
+
+.feature-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 2rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    border-radius: 16px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: -1;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    border-color: transparent;
+}
+
+.feature-card:hover::after {
+    opacity: 1;
+}
+
+.feature-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.feature-title {
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
+    color: var(--accent-primary);
+}
+
+.feature-desc {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+}
+
+.feature-fee {
+    color: var(--accent-tertiary);
+    font-size: 0.9rem;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin: 3rem 0;
+}
+
+.stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--accent-primary);
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    color: var(--accent-primary);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.token-type-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.token-type-card {
+    background: var(--bg-dark);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.token-type-card:hover {
+    border-color: var(--accent-primary);
+    transform: scale(1.05);
+}
+
+.token-type-card.selected {
+    border-color: var(--accent-primary);
+    background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(255, 51, 102, 0.1));
+}
+
+.token-type-name {
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--accent-primary);
+    font-size: 1.1rem;
+}
+
+.token-type-desc {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.platform-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin: 2rem 0;
+}
+
+.platform-card {
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.platform-card:hover {
+    border-color: var(--accent-primary);
+    transform: translateY(-3px);
+}
+
+.platform-card.selected {
+    border-color: var(--accent-primary);
+    background: rgba(0, 255, 136, 0.1);
+}
+
+.platform-logo {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.platform-name {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.platform-chain {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+    .features-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .token-type-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .platform-selector {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
