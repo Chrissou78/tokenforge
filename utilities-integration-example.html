@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<!--
+TokenForge Pro - Integration Example
+This file shows how to integrate all the new utilities into existing pages
+Copy these patterns into your actual HTML files
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TokenForge Pro - Utilities Integration Example</title>
+    
+    <!-- Existing CSS -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/features.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔧 Utilities Integration Example</h1>
+            <p>This page demonstrates how to use all the new utilities</p>
+        </header>
+
+        <!-- Example 1: Form with Validation -->
+        <section class="section">
+            <h2>Example 1: Token Creation Form with Validation</h2>
+            
+            <form id="tokenForm" onsubmit="handleTokenSubmit(event)">
+                <div>
+                    <label>Token Name:</label>
+                    <input type="text" id="tokenName" placeholder="My Token" required>
+                    <small id="nameError" style="color: #ff6b6b; display: none;"></small>
+                </div>
+
+                <div>
+                    <label>Token Symbol:</label>
+                    <input type="text" id="tokenSymbol" placeholder="MTK" required>
+                    <small id="symbolError" style="color: #ff6b6b; display: none;"></small>
+                </div>
+
+                <div>
+                    <label>Initial Supply:</label>
+                    <input type="number" id="initialSupply" placeholder="1000000" required>
+                    <small id="supplyError" style="color: #ff6b6b; display: none;"></small>
+                </div>
+
+                <button type="submit">Create Token</button>
+            </form>
+
+            <div id="formErrors" style="display: none; margin-top: 1rem; padding: 1rem; background: #2d1f15; border-left: 4px solid #ff6b6b; border-radius: 4px;"></div>
+        </section>
+
+        <!-- Example 2: Wallet Generation with Security Modal -->
+        <section class="section">
+            <h2>Example 2: Secure Wallet Generation</h2>
+            
+            <button onclick="handleWalletGeneration()">Generate Wallet (Secure)</button>
+            
+            <div id="walletDisplay" style="margin-top: 1rem;"></div>
+        </section>
+
+        <!-- Example 3: CSV Export with Warning -->
+        <section class="section">
+            <h2>Example 3: CSV Export with Security Warning</h2>
+            
+            <button onclick="handleCSVExport()">Export to CSV (Secure)</button>
+        </section>
+
+        <!-- Example 4: Loading States -->
+        <section class="section">
+            <h2>Example 4: Loading States</h2>
+            
+            <button onclick="demoLoading()">Show Loading (Basic)</button>
+            <button onclick="demoLoadingWithProgress()">Show Loading (with Progress)</button>
+            <button onclick="demoButtonLoading(event)">Button Loading State</button>
+        </section>
+
+        <!-- Example 5: Error Handling -->
+        <section class="section">
+            <h2>Example 5: User-Friendly Error Messages</h2>
+            
+            <button onclick="demoErrorHandling()">Trigger Sample Error</button>
+        </section>
+    </div>
+
+    <!-- Import utilities (ES6 modules) -->
+    <script type="module">
+        import { Validator } from './js/validation.js';
+        import { ErrorHandler } from './js/error-handler.js';
+        import { LoadingManager } from './js/loading-manager.js';
+        import { SecurityModal } from './js/security-modal.js';
+        import { DeploymentConfig } from './js/deployment-config.js';
+
+        // Make utilities globally available
+        window.Validator = Validator;
+        window.ErrorHandler = ErrorHandler;
+        window.LoadingManager = LoadingManager;
+        window.SecurityModal = SecurityModal;
+        window.DeploymentConfig = DeploymentConfig;
+
+        // Validate configuration
+        DeploymentConfig.validate();
+
+        // Add clear data button
+        window.addClearDataButton = function() {
+            const button = document.createElement('button');
+            button.style.cssText = 'position: fixed; bottom: 2rem; right: 2rem; padding: 1rem 1.5rem; background: #ff6b6b; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; z-index: 999;';
+            button.textContent = '🗑️ Clear All Data';
+            button.onclick = () => {
+                if (confirm('Clear all sensitive data from memory?')) {
+                    alert('Data cleared! (In production, this would clear all wallet data)');
+                }
+            };
+            document.body.appendChild(button);
+        };
+
+        // Call it
+        addClearDataButton();
+    </script>
+
+    <!-- Example Functions -->
+    <script>
+        // Example 1: Form Validation
+        function handleTokenSubmit(event) {
+            event.preventDefault();
+
+            // Get form data
+            const formData = {
+                name: document.getElementById('tokenName').value,
+                symbol: document.getElementById('tokenSymbol').value,
+                supply: document.getElementById('initialSupply').value,
+                decimals: 18
+            };
+
+            // Validate name
+            const nameCheck = Validator.isValidTokenName(formData.name);
+            const nameError = document.getElementById('nameError');
+            if (!nameCheck.valid) {
+                nameError.textContent = nameCheck.error;
+                nameError.style.display = 'block';
+                return;
+            } else {
+                nameError.style.display = 'none';
+            }
+
+            // Validate symbol
+            const symbolCheck = Validator.isValidTokenSymbol(formData.symbol);
+            const symbolError = document.getElementById('symbolError');
+            if (!symbolCheck.valid) {
+                symbolError.textContent = symbolCheck.error;
+                symbolError.style.display = 'block';
+                return;
+            } else {
+                symbolError.style.display = 'none';
+            }
+
+            // Validate supply
+            const supplyCheck = Validator.isValidSupply(formData.supply);
+            const supplyError = document.getElementById('supplyError');
+            if (!supplyCheck.valid) {
+                supplyError.textContent = supplyCheck.error;
+                supplyError.style.display = 'block';
+                return;
+            } else {
+                supplyError.style.display = 'none';
+            }
+
+            // All valid!
+            alert('✅ Form is valid! Token would be created with:\n\n' + JSON.stringify(formData, null, 2));
+        }
+
+        // Example 2: Secure Wallet Generation
+        async function handleWalletGeneration() {
+            try {
+                // Show security warning first
+                const accepted = await SecurityModal.showWalletWarning();
+                
+                if (!accepted) {
+                    alert('Wallet generation cancelled');
+                    return;
+                }
+
+                // Show loading
+                LoadingManager.show('Generating wallet...');
+
+                // Simulate wallet generation (2 seconds)
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                // Hide loading
+                LoadingManager.hide();
+
+                // Show result
+                const display = document.getElementById('walletDisplay');
+                display.innerHTML = `
+                    <div style="background: #0a0e1a; padding: 1rem; border-radius: 8px; border-left: 4px solid #48bb78;">
+                        <strong style="color: #48bb78;">✅ Wallet Generated Successfully!</strong>
+                        <p style="margin: 0.5rem 0; color: #8892b0;">Address: 0x1234...5678</p>
+                        <p style="margin: 0.5rem 0; color: #8892b0; font-size: 0.85rem;">⚠️ In production, this would show the real wallet data</p>
+                    </div>
+                `;
+
+            } catch (error) {
+                LoadingManager.hide();
+                ErrorHandler.show(error);
+            }
+        }
+
+        // Example 3: CSV Export with Warning
+        async function handleCSVExport() {
+            try {
+                // Show CSV export warning
+                const accepted = await SecurityModal.showCSVExportWarning();
+                
+                if (!accepted) {
+                    alert('CSV export cancelled');
+                    return;
+                }
+
+                // Show loading
+                LoadingManager.show('Preparing CSV...');
+
+                // Simulate export (1 second)
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                // Hide loading
+                LoadingManager.hide();
+
+                // In production, this would actually export
+                alert('✅ CSV exported!\n\n⚠️ Remember to:\n• Encrypt the file immediately\n• Delete unencrypted copy\n• Store in secure location');
+
+            } catch (error) {
+                LoadingManager.hide();
+                ErrorHandler.show(error);
+            }
+        }
+
+        // Example 4: Loading Demos
+        async function demoLoading() {
+            LoadingManager.show('Processing...');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            LoadingManager.hide();
+            alert('Done!');
+        }
+
+        async function demoLoadingWithProgress() {
+            LoadingManager.show('Processing with progress...', { showProgress: true });
+            
+            for (let i = 0; i <= 100; i += 10) {
+                LoadingManager.updateProgress(i);
+                LoadingManager.updateMessage(`Processing... ${i}%`);
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+            
+            LoadingManager.hide();
+            alert('Done!');
+        }
+
+        async function demoButtonLoading(event) {
+            const button = event.target;
+            LoadingManager.showButtonLoading(button, 'Processing...');
+            
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            LoadingManager.hideButtonLoading(button);
+            alert('Done!');
+        }
+
+        // Example 5: Error Handling Demo
+        function demoErrorHandling() {
+            try {
+                // Simulate an error
+                throw new Error('user rejected transaction');
+            } catch (error) {
+                // ErrorHandler will convert this to user-friendly message
+                ErrorHandler.show(error, { network: 'Ethereum' });
+            }
+        }
+    </script>
+
+    <style>
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .section { background: #121826; border: 2px solid #1f2937; border-radius: 12px; padding: 2rem; margin: 2rem 0; }
+        h1 { color: #00d4ff; }
+        h2 { color: #00d4ff; font-size: 1.3rem; margin-bottom: 1.5rem; }
+        label { display: block; margin-top: 1rem; color: #8892b0; font-weight: 500; }
+        input { width: 100%; padding: 0.8rem; margin-top: 0.5rem; background: #0a0e1a; border: 2px solid #1f2937; color: white; border-radius: 6px; font-size: 1rem; }
+        input:focus { outline: none; border-color: #00d4ff; }
+        button { padding: 0.875rem 1.5rem; margin: 0.5rem 0.5rem 0.5rem 0; background: #00d4ff; color: #0a0e1a; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+        button:hover { background: #0099cc; transform: translateY(-2px); }
+        small { display: block; margin-top: 0.3rem; }
+    </style>
+</body>
+</html>

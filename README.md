@@ -5,6 +5,28 @@ A professional, production-ready web application for deploying ERC20 tokens acro
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Chains](https://img.shields.io/badge/chains-41%2B-green.svg)
 ![Contracts](https://img.shields.io/badge/contracts-23-orange.svg)
+![Security](https://img.shields.io/badge/security-hardened-green.svg)
+
+## ⚠️ CRITICAL: Before Deployment
+
+**🔴 YOU MUST CHANGE THESE BEFORE DEPLOYING TO PRODUCTION:**
+
+1. **Fee Recipient Address** (REQUIRED)
+   - File: `js/deployment-config.js`
+   - Current: `0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb`
+   - **Change to YOUR wallet address!**
+
+2. **Security Review** (REQUIRED)
+   - Read `SECURITY.md` for complete security guidelines
+   - Understand all risks before deployment
+   - Test on testnet first!
+
+3. **Configuration** (RECOMMENDED)
+   - Review settings in `js/deployment-config.js`
+   - Adjust fees if needed
+   - Configure API keys (optional)
+
+**🚨 DO NOT SKIP THIS! Using default settings in production is a security risk.**
 
 ## ✨ Features
 
